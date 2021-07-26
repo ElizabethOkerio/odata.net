@@ -9,8 +9,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OData.Core.Tests.DependencyInjection;
 using Microsoft.OData.Edm;
-using Microsoft.Test.OData.DependencyInjection;
 using Microsoft.Test.OData.Utils.ODataLibTest;
 using Xunit;
 
@@ -1159,7 +1160,9 @@ namespace Microsoft.OData.Tests.IntegrationTests.Reader.JsonLight
 
         private ODataResource ReadJsonLightEntry(string payload, string contentType, bool readingResponse, bool enableReadingODataAnnotationWithoutPrefix = false)
         {
-            var container = ContainerBuilderHelper.BuildContainer(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
+            container.GetRequiredService<ODataMessageReaderSettings>().EnableReadingODataAnnotationWithoutPrefix =
+                enableReadingODataAnnotationWithoutPrefix;
 
             InMemoryMessage message = new InMemoryMessage() { Container = container };
             message.SetHeader("Content-Type", contentType);

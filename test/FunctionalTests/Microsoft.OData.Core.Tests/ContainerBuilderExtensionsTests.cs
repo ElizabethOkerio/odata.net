@@ -5,6 +5,7 @@
 //---------------------------------------------------------------------
 
 using System;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Test.OData.DependencyInjection;
 using Xunit;
 
@@ -12,48 +13,49 @@ namespace Microsoft.OData.Tests
 {
     public class ContainerBuilderExtensionsTests
     {
+        private IServiceCollection services;
+        public ContainerBuilderExtensionsTests()
+        {
+            services = new ServiceCollection();
+        }
+
         [Fact]
         public void AddServiceWithServiceType()
         {
-            IContainerBuilder builder = new TestContainerBuilder();
-            builder.AddService(ServiceLifetime.Transient, typeof(Foo));
-            IServiceProvider container = builder.BuildContainer();
+            services.AddTransient(typeof(Foo));
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<Foo>());
         }
 
         [Fact]
         public void AddServiceWithTServiceAndTImplementation()
         {
-            IContainerBuilder builder = new TestContainerBuilder();
-            builder.AddService<IFoo, Foo>(ServiceLifetime.Transient);
-            IServiceProvider container = builder.BuildContainer();
+            services.AddTransient<IFoo, Foo>();
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<IFoo>());
         }
 
         [Fact]
         public void AddServiceWithTServiceOnly()
         {
-            IContainerBuilder builder = new TestContainerBuilder();
-            builder.AddService<Foo>(ServiceLifetime.Transient);
-            IServiceProvider container = builder.BuildContainer();
+            services.AddTransient<Foo>();
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<Foo>());
         }
 
         [Fact]
         public void AddServiceWithTServiceFactory()
         {
-            IContainerBuilder builder = new TestContainerBuilder();
-            builder.AddService(ServiceLifetime.Transient, sp => new Foo());
-            IServiceProvider container = builder.BuildContainer();
+            services.AddTransient(sp => new Foo());
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<Foo>());
         }
 
         [Fact]
         public void AddServiceWithTServiceAndTImplementationFactory()
         {
-            IContainerBuilder builder = new TestContainerBuilder();
-            builder.AddService<IFoo>(ServiceLifetime.Transient, sp => new Foo());
-            IServiceProvider container = builder.BuildContainer();
+            services.AddTransient<IFoo>(sp => new Foo());
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<IFoo>());
         }
 

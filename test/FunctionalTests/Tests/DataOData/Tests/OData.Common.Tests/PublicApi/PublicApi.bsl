@@ -4909,12 +4909,12 @@ public sealed class Microsoft.OData.ContainerBuilderExtensions {
 	[
 	ExtensionAttribute(),
 	]
-	public static Microsoft.OData.IContainerBuilder AddDefaultODataServices (Microsoft.OData.IContainerBuilder builder)
+	public static Microsoft.OData.IContainerBuilder AddOData (Microsoft.OData.IContainerBuilder builder)
 
 	[
 	ExtensionAttribute(),
 	]
-	public static Microsoft.OData.IContainerBuilder AddDefaultODataServices (Microsoft.OData.IContainerBuilder builder, Microsoft.OData.ODataVersion odataVersion)
+	public static Microsoft.OData.IContainerBuilder AddOData (Microsoft.OData.IContainerBuilder builder, Microsoft.OData.ODataVersion odataVersion)
 
 	[
 	ExtensionAttribute(),

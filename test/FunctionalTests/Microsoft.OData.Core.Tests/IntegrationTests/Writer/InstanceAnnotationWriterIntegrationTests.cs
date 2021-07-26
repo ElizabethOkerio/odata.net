@@ -6,8 +6,9 @@
 
 using System;
 using System.IO;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OData.Core.Tests.DependencyInjection;
 using Microsoft.OData.Edm;
-using Microsoft.Test.OData.DependencyInjection;
 using Xunit;
 
 namespace Microsoft.OData.Tests.IntegrationTests.Writer
@@ -706,7 +707,9 @@ namespace Microsoft.OData.Tests.IntegrationTests.Writer
             writerSettings.SetContentType(format);
             writerSettings.SetServiceDocumentUri(new Uri("http://www.example.com/"));
 
-            var container = ContainerBuilderHelper.BuildContainer(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
+            container.GetRequiredService<ODataMessageWriterSettings>().SetOmitODataPrefix(
+                enableWritingODataAnnotationWithoutPrefix);
 
             MemoryStream stream = new MemoryStream();
             if (request)

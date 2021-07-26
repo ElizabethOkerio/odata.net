@@ -16,6 +16,7 @@ namespace Microsoft.OData
     using System.Text;
     using System.Threading.Tasks;
     using System.Xml;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.OData.Edm;
     using Microsoft.OData.Metadata;
     #endregion Namespaces
