@@ -14,8 +14,9 @@ using Microsoft.OData.JsonLight;
 using Microsoft.OData.Tests.JsonLight;
 using Microsoft.OData.Edm;
 using Microsoft.Spatial;
-using Microsoft.Test.OData.DependencyInjection;
 using Xunit;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OData.Core.Tests.DependencyInjection;
 
 namespace Microsoft.OData.Tests.ScenarioTests.Roundtrip.JsonLight
 {
@@ -60,8 +61,8 @@ namespace Microsoft.OData.Tests.ScenarioTests.Roundtrip.JsonLight
                 Convert.ToBase64String(values[2])
             };
 
-            this.container = ContainerBuilderHelper.BuildContainer(
-                builder => builder.AddService<ODataPayloadValueConverter, BinaryFieldAsStringPrimitivePayloadValueConverter>(ServiceLifetime.Singleton));
+            this.container = ServiceProviderBuilderHelper.BuildServiceProvider(
+                builder => builder.AddSingleton<ODataPayloadValueConverter, BinaryFieldAsStringPrimitivePayloadValueConverter>());
 
             this.VerifyPrimitiveValuesRoundtripWithTypeInformationAndWithExpectedValues(values, "Edm.Binary", expectedValues);
             this.VerifyPrimitiveValuesRoundtripWithTypeInformation(expectedValues, "Edm.Binary");

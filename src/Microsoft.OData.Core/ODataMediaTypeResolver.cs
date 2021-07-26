@@ -6,6 +6,7 @@
 
 namespace Microsoft.OData
 {
+    using Microsoft.Extensions.DependencyInjection;
     #region Namespaces
     using System;
     using System.Collections.Generic;

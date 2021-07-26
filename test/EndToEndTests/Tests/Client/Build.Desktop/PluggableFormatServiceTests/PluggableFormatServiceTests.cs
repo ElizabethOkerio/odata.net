@@ -19,6 +19,8 @@ using Microsoft.Test.OData.Services.TestServices;
 using Microsoft.Test.OData.Services.TestServices.PluggableFormatServiceReference;
 using Microsoft.Test.OData.Tests.Client.Common;
 using Xunit;
+using Microsoft.OData.Core;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Test.OData.Tests.Client.ODataWCFServiceTests
 {
@@ -287,14 +289,16 @@ namespace Microsoft.Test.OData.Tests.Client.ODataWCFServiceTests
 
         private static void SetAvroMediaTypeResolver(HttpWebRequestMessage requestMessage)
         {
-            requestMessage.Container = ContainerBuilderHelper.BuildContainer(builder =>
-                builder.AddService<ODataMediaTypeResolver, AvroMediaTypeResolver>(ServiceLifetime.Singleton));
+            IServiceCollection services = new ServiceCollection();
+            IServiceProvider serviceProvider = services.AddDefaultODataServices().BuildServiceProvider();
+            requestMessage.Container = ServiceProviderBuilderHelper.BuildServiceProvider(builder =>
+                builder.AddSingleton<ODataMediaTypeResolver, AvroMediaTypeResolver>());
         }
 
         private static void SetVCardMediaTypeResolver(HttpWebRequestMessage requestMessage)
         {
-            requestMessage.Container = ContainerBuilderHelper.BuildContainer(builder =>
-                builder.AddService<ODataMediaTypeResolver, VCardMediaTypeResolver>(ServiceLifetime.Singleton));
+            requestMessage.Container = ServiceProviderBuilderHelper.BuildServiceProvider(builder =>
+                builder.AddSingleton<ODataMediaTypeResolver, VCardMediaTypeResolver>());
         }
 
         private ODataMessageReaderSettings GetAvroReaderSettings()

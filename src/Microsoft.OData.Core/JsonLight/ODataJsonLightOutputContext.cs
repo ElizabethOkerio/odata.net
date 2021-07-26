@@ -13,6 +13,7 @@ namespace Microsoft.OData.JsonLight
     using System.IO;
     using System.Text;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.OData.Edm;
     using Microsoft.OData.Json;
     #endregion Namespaces

@@ -11,9 +11,10 @@ using System.Linq;
 using System.Text;
 using Microsoft.OData.Tests.JsonLight;
 using Microsoft.OData.Edm;
-using Microsoft.Test.OData.DependencyInjection;
 using Xunit;
 using ODataErrorStrings = Microsoft.OData.Strings;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OData.Core.Tests.DependencyInjection;
 
 namespace Microsoft.OData.Tests.IntegrationTests.Reader.JsonLight
 {
@@ -970,8 +971,8 @@ namespace Microsoft.OData.Tests.IntegrationTests.Reader.JsonLight
                 "}";
 
             ODataResource entry = null;
-            var diContainer = ContainerBuilderHelper.BuildContainer(
-                builder => builder.AddService<ODataPayloadValueConverter, DateTimeOffsetCustomFormatPrimitivePayloadValueConverter>(ServiceLifetime.Singleton));
+            var diContainer = ServiceProviderBuilderHelper.BuildServiceProvider(
+                builder => builder.AddSingleton<ODataPayloadValueConverter, DateTimeOffsetCustomFormatPrimitivePayloadValueConverter>());
             this.ReadEntryPayload(model, payload, entitySet, entityType, reader => { entry = entry ?? reader.Item as ODataResource; }, container: diContainer);
             Assert.NotNull(entry);
 

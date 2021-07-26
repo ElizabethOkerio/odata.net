@@ -8,8 +8,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.OData.Core.Tests.DependencyInjection;
 using Microsoft.OData.Edm;
-using Microsoft.Test.OData.DependencyInjection;
 using Xunit;
 
 namespace Microsoft.OData.Tests.IntegrationTests.Reader.JsonLight
@@ -165,11 +165,14 @@ namespace Microsoft.OData.Tests.IntegrationTests.Reader.JsonLight
         private static ODataMessageReader CreateODataMessageReader(string payload, string contentType, bool isResponse, bool shouldReadAndValidateCustomInstanceAnnotations, bool enableReadingODataAnnotationWithoutPrefix = false)
         {
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(payload));
-            var readerSettings = new ODataMessageReaderSettings {
+
+            var readerSettings = new ODataMessageReaderSettings 
+            { 
                 EnableMessageStreamDisposal = false,
                 EnableReadingODataAnnotationWithoutPrefix = enableReadingODataAnnotationWithoutPrefix
             };
-            var container = ContainerBuilderHelper.BuildContainer(null);
+            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+
             ODataMessageReader messageReader;
             if (isResponse)
             {

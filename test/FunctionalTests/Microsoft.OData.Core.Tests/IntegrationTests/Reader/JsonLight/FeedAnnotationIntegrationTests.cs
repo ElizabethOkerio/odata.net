@@ -7,8 +7,9 @@
 using System;
 using System.IO;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OData.Core.Tests.DependencyInjection;
 using Microsoft.OData.Edm;
-using Microsoft.Test.OData.DependencyInjection;
 using Xunit;
 using ErrorStrings = Microsoft.OData.Strings;
 
@@ -534,7 +535,8 @@ namespace Microsoft.OData.Tests.IntegrationTests.Reader.JsonLight
             const string payloadSuffix = "}";
             string payload = payloadPrefix + payloadBody + payloadSuffix;
 
-            var container = ContainerBuilderHelper.BuildContainer(null);
+            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+            container.GetRequiredService<ODataMessageReaderSettings>().EnableReadingODataAnnotationWithoutPrefix = enableReadingODataAnnotationWithoutPrefix;
 
             var message = new InMemoryMessage() { Container = container };
             message.Stream = new MemoryStream(Encoding.UTF8.GetBytes(payload));

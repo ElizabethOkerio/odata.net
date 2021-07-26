@@ -1,4 +1,7 @@
+Microsoft.OData.IContainerProvider
+Microsoft.OData.IContainerProvider.Container.get -> System.IServiceProvider
 Microsoft.OData.Json.DefaultJsonWriterFactory.CreateJsonWriter(System.IO.Stream stream, bool isIeee754Compatible, System.Text.Encoding encoding) -> Microsoft.OData.Json.IJsonWriter
+Microsoft.Extensions.DependencyInjection.ODataServiceColectionExtensions
 Microsoft.OData.Json.IJsonWriter.EndArrayScopeAsync() -> System.Threading.Tasks.Task
 Microsoft.OData.Json.IJsonWriter.EndObjectScopeAsync() -> System.Threading.Tasks.Task
 Microsoft.OData.Json.IJsonWriter.EndPaddingFunctionScopeAsync() -> System.Threading.Tasks.Task
@@ -59,6 +62,8 @@ Microsoft.OData.ODataMessageWriterSettings.BufferSize.get -> int
 Microsoft.OData.ODataMessageWriterSettings.BufferSize.set -> void
 Microsoft.OData.UriParser.ODataUriParserSettings.EnableParsingKeyAsSegment.get -> bool
 Microsoft.OData.UriParser.ODataUriParserSettings.EnableParsingKeyAsSegment.set -> void
+static Microsoft.Extensions.DependencyInjection.ODataServiceColectionExtensions.AddDefaultODataServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
+static Microsoft.Extensions.DependencyInjection.ODataServiceColectionExtensions.AddDefaultODataServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.OData.ODataVersion odataVersion) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
 static Microsoft.OData.UriParser.ODataPathExtensions.TrimEndingTypeAndKeySegments(this Microsoft.OData.UriParser.ODataPath path) -> Microsoft.OData.UriParser.ODataPath
 override Microsoft.OData.ODataEnumValue.ToString() -> string
 override Microsoft.OData.ODataPrimitiveValue.ToString() -> string
@@ -194,7 +199,6 @@ Microsoft.OData.BatchPayloadUriOption.RelativeUri = 2 -> Microsoft.OData.BatchPa
 Microsoft.OData.Buffers.ICharArrayPool
 Microsoft.OData.Buffers.ICharArrayPool.Rent(int minSize) -> char[]
 Microsoft.OData.Buffers.ICharArrayPool.Return(char[] array) -> void
-Microsoft.OData.ContainerBuilderExtensions
 Microsoft.OData.DeltaDeletedEntryReason
 Microsoft.OData.DeltaDeletedEntryReason.Changed = 1 -> Microsoft.OData.DeltaDeletedEntryReason
 Microsoft.OData.DeltaDeletedEntryReason.Deleted = 0 -> Microsoft.OData.DeltaDeletedEntryReason
@@ -205,12 +209,6 @@ Microsoft.OData.HttpHeaderValueElement.HttpHeaderValueElement(string name, strin
 Microsoft.OData.HttpHeaderValueElement.Name.get -> string
 Microsoft.OData.HttpHeaderValueElement.Parameters.get -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>>
 Microsoft.OData.HttpHeaderValueElement.Value.get -> string
-Microsoft.OData.IContainerBuilder
-Microsoft.OData.IContainerBuilder.AddService(Microsoft.OData.ServiceLifetime lifetime, System.Type serviceType, System.Func<System.IServiceProvider, object> implementationFactory) -> Microsoft.OData.IContainerBuilder
-Microsoft.OData.IContainerBuilder.AddService(Microsoft.OData.ServiceLifetime lifetime, System.Type serviceType, System.Type implementationType) -> Microsoft.OData.IContainerBuilder
-Microsoft.OData.IContainerBuilder.BuildContainer() -> System.IServiceProvider
-Microsoft.OData.IContainerProvider
-Microsoft.OData.IContainerProvider.Container.get -> System.IServiceProvider
 Microsoft.OData.IODataPayloadUriConverter
 Microsoft.OData.IODataPayloadUriConverter.ConvertPayloadUri(System.Uri baseUri, System.Uri payloadUri) -> System.Uri
 Microsoft.OData.IODataRequestMessage
@@ -2212,13 +2210,6 @@ override Microsoft.OData.UriParser.WildcardSelectItem.HandleWith(Microsoft.OData
 override Microsoft.OData.UriParser.WildcardSelectItem.TranslateWith<T>(Microsoft.OData.UriParser.SelectItemTranslator<T> translator) -> T
 readonly Microsoft.OData.ODataBatchOperationRequestMessage.ContentId -> string
 readonly Microsoft.OData.ODataBatchOperationResponseMessage.ContentId -> string
-static Microsoft.OData.ContainerBuilderExtensions.AddDefaultODataServices(this Microsoft.OData.IContainerBuilder builder) -> Microsoft.OData.IContainerBuilder
-static Microsoft.OData.ContainerBuilderExtensions.AddDefaultODataServices(this Microsoft.OData.IContainerBuilder builder, Microsoft.OData.ODataVersion odataVersion) -> Microsoft.OData.IContainerBuilder
-static Microsoft.OData.ContainerBuilderExtensions.AddService(this Microsoft.OData.IContainerBuilder builder, Microsoft.OData.ServiceLifetime lifetime, System.Type serviceType) -> Microsoft.OData.IContainerBuilder
-static Microsoft.OData.ContainerBuilderExtensions.AddService<TService, TImplementation>(this Microsoft.OData.IContainerBuilder builder, Microsoft.OData.ServiceLifetime lifetime) -> Microsoft.OData.IContainerBuilder
-static Microsoft.OData.ContainerBuilderExtensions.AddService<TService>(this Microsoft.OData.IContainerBuilder builder, Microsoft.OData.ServiceLifetime lifetime) -> Microsoft.OData.IContainerBuilder
-static Microsoft.OData.ContainerBuilderExtensions.AddService<TService>(this Microsoft.OData.IContainerBuilder builder, Microsoft.OData.ServiceLifetime lifetime, System.Func<System.IServiceProvider, TService> implementationFactory) -> Microsoft.OData.IContainerBuilder
-static Microsoft.OData.ContainerBuilderExtensions.AddServicePrototype<TService>(this Microsoft.OData.IContainerBuilder builder, TService instance) -> Microsoft.OData.IContainerBuilder
 static Microsoft.OData.ODataFormat.Batch.get -> Microsoft.OData.ODataFormat
 static Microsoft.OData.ODataFormat.Json.get -> Microsoft.OData.ODataFormat
 static Microsoft.OData.ODataFormat.Metadata.get -> Microsoft.OData.ODataFormat

@@ -16,9 +16,10 @@ using Microsoft.OData.Edm.Vocabularies;
 using Microsoft.OData.Edm.Vocabularies.V1;
 using Microsoft.OData.Json;
 using Microsoft.Spatial;
-using Microsoft.Test.OData.DependencyInjection;
 using Xunit;
 using ODataErrorStrings = Microsoft.OData.Strings;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OData.Core.Tests.DependencyInjection;
 
 namespace Microsoft.OData.Tests.Json
 {
@@ -866,9 +867,9 @@ namespace Microsoft.OData.Tests.Json
                 IsAsync = false,
                 Model = model,
                 Container =
-                    ContainerBuilderHelper.BuildContainer(
+                    ServiceProviderBuilderHelper.BuildServiceProvider(
                         builder =>
-                            builder.AddService<IJsonWriterFactory>(ServiceLifetime.Singleton, sp => new MockJsonWriterFactory(jsonWriter))),
+                            builder.AddSingleton<IJsonWriterFactory>(sp => new MockJsonWriterFactory(jsonWriter))),
 
             };
 
