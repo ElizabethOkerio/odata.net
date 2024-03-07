@@ -45,9 +45,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton(sp => ODataMediaTypeResolver.GetMediaTypeResolver(null));
             services.AddScoped<ODataMessageInfo>();
             services.AddSingleton(new ODataMessageReaderSettings());
-            services.AddScoped(sp => sp.GetRequiredService<ODataMessageReaderSettings>().Clone());
             services.AddSingleton(new ODataMessageWriterSettings());
-            services.AddScoped(sp => sp.GetRequiredService<ODataMessageWriterSettings>().Clone());
             services.AddSingleton(sp => ODataPayloadValueConverter.GetPayloadValueConverter(null));
             services.AddSingleton<IEdmModel>(sp => EdmCoreModel.Instance);
             services.AddSingleton(sp => ODataUriResolver.GetUriResolver(null));
