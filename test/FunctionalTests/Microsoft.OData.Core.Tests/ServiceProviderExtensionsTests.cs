@@ -42,12 +42,12 @@ namespace Microsoft.OData.Tests
             Assert.NotNull(container.GetService(typeof(Foo)));
         }
 
-        [Fact(Skip ="test")]
+        [Fact]
         public void GetNonExistingRequiredServiceThrows()
         {
             Services.AddTransient(typeof(Foo));
             IServiceProvider container = Services.BuildServiceProvider();
-            Assert.Throws<ODataException>(() => container.GetRequiredService<IFoo>());
+            Assert.Throws<InvalidOperationException>(() => container.GetRequiredService<IFoo>());
         }
 
         [Fact]
