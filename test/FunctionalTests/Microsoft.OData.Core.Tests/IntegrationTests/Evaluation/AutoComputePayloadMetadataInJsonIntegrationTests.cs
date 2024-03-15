@@ -9,12 +9,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.OData.UriParser;
-using Microsoft.OData.Edm;
-using Xunit;
 using System.Threading.Tasks;
-using Microsoft.OData.Core.Tests.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OData.Core.Tests.DependencyInjection;
+using Microsoft.OData.Edm;
+using Microsoft.OData.UriParser;
+using Xunit;
 
 namespace Microsoft.OData.Tests.IntegrationTests.Evaluation
 {
@@ -1364,7 +1364,7 @@ namespace Microsoft.OData.Tests.IntegrationTests.Evaluation
         public void WritingContainedNavigationPropertyWithoutProvideKeyPropertyOnParentResourceWorks(string metadataLevel)
         {
             MemoryStream outputStream = new MemoryStream();
-            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
             IODataResponseMessage message = new InMemoryMessage() { Stream = outputStream, Container = container };
 
             message.SetHeader("Content-Type", metadataLevel == "full" ? "application/json;odata.metadata=full" : "application/json");
@@ -1447,7 +1447,7 @@ namespace Microsoft.OData.Tests.IntegrationTests.Evaluation
         public void WritingContainedNavigationPropertyWithKeyPropertyOnParentResourceWorks(string metadataLevel)
         {
             MemoryStream outputStream = new MemoryStream();
-            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
             IODataResponseMessage message = new InMemoryMessage() { Stream = outputStream, Container = container };
 
             message.SetHeader("Content-Type", metadataLevel == "full" ? "application/json;odata.metadata=full" : "application/json");
@@ -1533,7 +1533,7 @@ namespace Microsoft.OData.Tests.IntegrationTests.Evaluation
         public async Task WritingContainedNavigationPropertyWithoutProvideKeyPropertyOnParentResourceSetWorks(string metadataLevel)
         {
             MemoryStream outputStream = new MemoryStream();
-            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
             IODataResponseMessage message = new InMemoryMessage() { Stream = outputStream, Container = container };
 
             message.SetHeader("Content-Type", metadataLevel == "full" ? "application/json;odata.metadata=full" : "application/json");
@@ -3207,7 +3207,7 @@ namespace Microsoft.OData.Tests.IntegrationTests.Evaluation
         private string GetWriterOutputForContentTypeAndKnobValue(string contentType, bool autoComputePayloadMetadata, ODataItem[] itemsToWrite, EdmModel edmModel, IEdmEntitySetBase edmEntitySet, EdmEntityType edmEntityType, string selectClause = null, string expandClause = null, string resourcePath = null, bool enableWritingODataAnnotationWithoutPrefix = false)
         {
             MemoryStream outputStream = new MemoryStream();
-            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
 
             container.GetRequiredService<ODataMessageWriterSettings>().SetOmitODataPrefix(enableWritingODataAnnotationWithoutPrefix);
             IODataResponseMessage message = new InMemoryMessage() { Stream = outputStream, Container = container };

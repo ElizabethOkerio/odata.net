@@ -61,7 +61,7 @@ namespace Microsoft.OData.Tests.ScenarioTests.Roundtrip.JsonLight
                 Convert.ToBase64String(values[2])
             };
 
-            this.container = ServiceProviderBuilderHelper.BuildServiceProvider(
+            this.container = ServiceProviderHelper.BuildServiceProvider(
                 builder => builder.AddSingleton<ODataPayloadValueConverter, BinaryFieldAsStringPrimitivePayloadValueConverter>());
 
             this.VerifyPrimitiveValuesRoundtripWithTypeInformationAndWithExpectedValues(values, "Edm.Binary", expectedValues);

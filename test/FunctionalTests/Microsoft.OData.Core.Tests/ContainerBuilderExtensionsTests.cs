@@ -13,48 +13,49 @@ namespace Microsoft.OData.Tests
 {
     public class ContainerBuilderExtensionsTests
     {
-        private IServiceCollection Services;
+        private IServiceCollection services;
         public ContainerBuilderExtensionsTests()
         {
-            Services = new ServiceCollection();
+            services = new ServiceCollection();
         }
+
         [Fact]
         public void AddServiceWithServiceType()
         {
-            Services.AddTransient(typeof(Foo));
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient(typeof(Foo));
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<Foo>());
         }
 
         [Fact]
         public void AddServiceWithTServiceAndTImplementation()
         {
-            Services.AddTransient<IFoo, Foo>();
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient<IFoo, Foo>();
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<IFoo>());
         }
 
         [Fact]
         public void AddServiceWithTServiceOnly()
         {
-            Services.AddTransient<Foo>();
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient<Foo>();
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<Foo>());
         }
 
         [Fact]
         public void AddServiceWithTServiceFactory()
         {
-            Services.AddTransient(sp => new Foo());
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient(sp => new Foo());
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<Foo>());
         }
 
         [Fact]
         public void AddServiceWithTServiceAndTImplementationFactory()
         {
-            Services.AddTransient<IFoo>(sp => new Foo());
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient<IFoo>(sp => new Foo());
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<IFoo>());
         }
 

@@ -2213,7 +2213,7 @@ namespace Microsoft.OData.Core.Tests.JsonLight
 
             if (configAction != null)
             {
-                container = ServiceProviderBuilderHelper.BuildServiceProvider(configAction);
+                container = ServiceProviderHelper.BuildServiceProvider(configAction);
             }
 
             Stream messageStream = this.stream;

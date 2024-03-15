@@ -669,7 +669,7 @@ namespace Microsoft.OData.Tests.JsonLight
 
             if (configureServices != null)
             {
-                messageInfo.Container = ServiceProviderBuilderHelper.BuildServiceProvider(configureServices);
+                messageInfo.Container = ServiceProviderHelper.BuildServiceProvider(configureServices);
             }
 
             return new ODataJsonLightOutputContext(messageInfo, settings);

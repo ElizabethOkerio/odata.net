@@ -9,12 +9,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
-using Microsoft.OData.JsonLight;
-using Microsoft.OData.Json;
-using Microsoft.OData.Edm;
-using Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OData.Core.Tests.DependencyInjection;
+using Microsoft.OData.Edm;
+using Microsoft.OData.JsonLight;
+using Microsoft.OData.Json;
+using Xunit;
 
 namespace Microsoft.OData.Tests.JsonLight
 {
@@ -128,7 +128,7 @@ namespace Microsoft.OData.Tests.JsonLight
                 var value = new DateTimeOffset(2012, 4, 13, 2, 43, 10, TimeSpan.FromHours(8));
                 serializer.WritePrimitiveValue(value, df);
             },
-            ServiceProviderBuilderHelper.BuildServiceProvider(
+            ServiceProviderHelper.BuildServiceProvider(
                 builder => builder.AddSingleton<ODataPayloadValueConverter, DateTimeOffsetCustomFormatPrimitivePayloadValueConverter>()));
 
             Assert.Equal("\"Thu, 12 Apr 2012 18:43:10 GMT\"", result);
@@ -353,7 +353,7 @@ namespace Microsoft.OData.Tests.JsonLight
                 services.AddSingleton<IJsonWriterFactory>((sp) => ODataUtf8JsonWriterFactory.Default);
             };
 
-            var container = ServiceProviderBuilderHelper.BuildServiceProvider(configureServices);
+            var container = ServiceProviderHelper.BuildServiceProvider(configureServices);
 
             var result = this.SetupSerializerAndRunTest(
                 (jsonLightValueSerializer) =>

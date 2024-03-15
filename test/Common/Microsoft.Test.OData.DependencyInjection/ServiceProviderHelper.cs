@@ -1,5 +1,5 @@
 ﻿//---------------------------------------------------------------------
-// <copyright file="ServiceProviderBuilderHelper.cs" company="Microsoft">
+// <copyright file="ServiceProviderHelper.cs" company="Microsoft">
 //      Copyright (C) Microsoft Corporation. All rights reserved. See License.txt in the project root for license information.
 // </copyright>
 //---------------------------------------------------------------------
@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.OData.Core.Tests.DependencyInjection
 {
-    public static class ServiceProviderBuilderHelper
+    public static class ServiceProviderHelper
     {
         public static IServiceProvider BuildServiceProvider(Action<IServiceCollection> action)
         {

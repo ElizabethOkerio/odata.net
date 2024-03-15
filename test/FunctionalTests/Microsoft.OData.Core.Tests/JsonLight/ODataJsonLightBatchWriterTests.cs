@@ -1136,7 +1136,7 @@ namespace Microsoft.OData.Core.Tests.JsonLight
 
         private static IServiceProvider CreateServiceProvider(Action<IServiceCollection> configureServices)
         {
-            return ServiceProviderBuilderHelper.BuildServiceProvider(configureServices);
+            return ServiceProviderHelper.BuildServiceProvider(configureServices);
         }
 
         #endregion Helper Methods

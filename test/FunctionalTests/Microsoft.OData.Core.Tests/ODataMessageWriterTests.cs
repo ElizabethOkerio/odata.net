@@ -8,21 +8,18 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OData.JsonLight;
 using Microsoft.OData.Edm;
 using Microsoft.OData.Json;
 using Microsoft.OData.Tests.Json;
-using Microsoft.Test.OData.DependencyInjection;
 using Microsoft.OData.UriParser;
+using Microsoft.Test.OData.DependencyInjection;
 using Xunit;using System.Xml;
-using Microsoft.Extensions.DependencyInjection;
-
 #if NETCOREAPP
 using System.Text.Json;
 #endif
-using System.Threading.Tasks;
-using Microsoft.OData.Core;
-using Microsoft.Extensions.DependencyInjection;
+
 namespace Microsoft.OData.Tests
 {
     /// <summary>

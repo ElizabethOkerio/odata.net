@@ -175,12 +175,12 @@ namespace Microsoft.Test.OData.Services.ODataWCFService.DataSource
             writerSettings.SetOmitODataPrefix(true);
 
             base.ConfigureContainer(services);
-            services.AddSingleton(new ODataMessageReaderSettings()
+            services.AddScoped(new ODataMessageReaderSettings()
             {
                 EnableReadingODataAnnotationWithoutPrefix = true,
             });
 
-            services.AddSingleton(writerSettings);
+            services.AddScoped(writerSettings);
         }
     }
 }

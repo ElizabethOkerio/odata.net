@@ -85,7 +85,7 @@ namespace Microsoft.Test.OData.Services.ODataWCFService.DataSource
             {
                 if (this.container == null)
                 {
-                    this.container = ServiceProviderBuilderHelper.BuildServiceProvider(this.ConfigureContainer);
+                    this.container = ServiceProviderHelper.BuildServiceProvider(this.ConfigureContainer);
                 }
 
                 return this.container;

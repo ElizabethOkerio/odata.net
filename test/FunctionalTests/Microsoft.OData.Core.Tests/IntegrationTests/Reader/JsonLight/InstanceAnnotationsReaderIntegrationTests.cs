@@ -171,7 +171,7 @@ namespace Microsoft.OData.Tests.IntegrationTests.Reader.JsonLight
                 EnableMessageStreamDisposal = false,
                 EnableReadingODataAnnotationWithoutPrefix = enableReadingODataAnnotationWithoutPrefix
             };
-            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
 
             ODataMessageReader messageReader;
             if (isResponse)

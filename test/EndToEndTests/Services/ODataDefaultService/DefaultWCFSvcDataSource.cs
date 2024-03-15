@@ -1210,17 +1210,17 @@ namespace Microsoft.Test.OData.Services.ODataWCFService
         protected override void ConfigureContainer(IServiceCollection services)
         {
             base.ConfigureContainer(services);
-            services.AddSingleton(new ODataMessageWriterSettings()
+            services.AddScoped(new ODataMessageWriterSettings()
             {
                 EnableReadingKeyAsSegment = false,
             });
 
-            services.AddSingleton(new ODataMessageWriterSettings()
+            services.AddScoped(new ODataMessageWriterSettings()
             {
                 EnableWritingKeyAsSegment = false,
             });
 
-            services.AddSingleton(new ODataUriParserSettings()
+            services.AddScoped(new ODataUriParserSettings()
             {
                 EnableParsingKeyAsSegmentUrl = false,
             });

@@ -406,7 +406,7 @@ namespace Microsoft.OData.Tests.ScenarioTests.Reader.JsonLight
                 MediaType = new ODataMediaType("application", "json"),
                 IsAsync = false,
                 Model = this.userModel,
-                Container = ServiceProviderBuilderHelper.BuildServiceProvider(null)
+                Container = ServiceProviderHelper.BuildServiceProvider(null)
             };
 
             using (var inputContext = new ODataJsonLightInputContext(

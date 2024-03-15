@@ -867,7 +867,7 @@ namespace Microsoft.OData.Tests.Json
                 IsAsync = false,
                 Model = model,
                 Container =
-                    ServiceProviderBuilderHelper.BuildServiceProvider(
+                    ServiceProviderHelper.BuildServiceProvider(
                         builder =>
                             builder.AddSingleton<IJsonWriterFactory>(sp => new MockJsonWriterFactory(jsonWriter))),
 

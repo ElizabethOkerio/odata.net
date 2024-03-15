@@ -1160,7 +1160,7 @@ namespace Microsoft.OData.Tests.IntegrationTests.Reader.JsonLight
 
         private ODataResource ReadJsonLightEntry(string payload, string contentType, bool readingResponse, bool enableReadingODataAnnotationWithoutPrefix = false)
         {
-            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
             container.GetRequiredService<ODataMessageReaderSettings>().EnableReadingODataAnnotationWithoutPrefix =
                 enableReadingODataAnnotationWithoutPrefix;
 

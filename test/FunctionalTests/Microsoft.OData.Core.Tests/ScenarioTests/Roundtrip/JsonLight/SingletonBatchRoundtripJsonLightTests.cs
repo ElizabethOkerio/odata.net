@@ -1407,7 +1407,7 @@ Content-Type: application/json;odata.metadata=none
 
             if (configureAction != null)
             {
-                container = ServiceProviderBuilderHelper.BuildServiceProvider(configureAction);
+                container = ServiceProviderHelper.BuildServiceProvider(configureAction);
             }
 
             IODataRequestMessage requestMessage = new InMemoryMessage()

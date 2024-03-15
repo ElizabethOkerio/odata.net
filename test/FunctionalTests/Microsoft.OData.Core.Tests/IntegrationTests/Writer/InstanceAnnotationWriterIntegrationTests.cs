@@ -707,7 +707,7 @@ namespace Microsoft.OData.Tests.IntegrationTests.Writer
             writerSettings.SetContentType(format);
             writerSettings.SetServiceDocumentUri(new Uri("http://www.example.com/"));
 
-            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
             container.GetRequiredService<ODataMessageWriterSettings>().SetOmitODataPrefix(
                 enableWritingODataAnnotationWithoutPrefix);
 

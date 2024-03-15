@@ -4122,7 +4122,7 @@ namespace Microsoft.OData.Tests.JsonLight
                 MediaType = new ODataMediaType("application", "json"),
                 IsAsync = false,
                 Model = model ?? new EdmModel(),
-                Container = ServiceProviderBuilderHelper.BuildServiceProvider(null)
+                Container = ServiceProviderHelper.BuildServiceProvider(null)
             };
 
             using (var inputContext = new ODataJsonLightInputContext(
@@ -4278,7 +4278,7 @@ namespace Microsoft.OData.Tests.JsonLight
                 MediaType = new ODataMediaType("application", "json"),
                 IsAsync = false,
                 Model = model ?? new EdmModel(),
-                Container = ServiceProviderBuilderHelper.BuildServiceProvider(null)
+                Container = ServiceProviderHelper.BuildServiceProvider(null)
             };
 
             var inputContext = new ODataJsonLightInputContext(
@@ -4559,7 +4559,7 @@ namespace Microsoft.OData.Tests.JsonLight
                 IsResponse = isResponse,
                 IsAsync = isAsync,
                 Model = this.Model,
-                Container = ServiceProviderBuilderHelper.BuildServiceProvider(null)
+                Container = ServiceProviderHelper.BuildServiceProvider(null)
             };
 
             return new ODataJsonLightInputContext(new StringReader(payload), messageInfo, this.messageReaderSettings);

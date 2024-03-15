@@ -554,7 +554,7 @@ namespace Microsoft.OData.Tests.JsonLight
         public async Task WriteSpatialCollectionPropertyForInjectedJsonWriterFactoryAsync()
         {
             var messageInfo = CreateMessageInfo(this.model, /*synchronous*/ true, /*writingResponse*/ true);
-            messageInfo.Container = ServiceProviderBuilderHelper.BuildServiceProvider(builder =>
+            messageInfo.Container = ServiceProviderHelper.BuildServiceProvider(builder =>
             {
                 builder.AddSingleton<IJsonWriterFactory>(_ => new DefaultJsonWriterFactory());
             });

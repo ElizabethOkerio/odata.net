@@ -89,7 +89,7 @@ namespace Microsoft.OData.Tests.ScenarioTests.Writer.JsonLight
             var settings = new ODataMessageWriterSettings { EnableWritingKeyAsSegment = useKeyAsSegment };
             settings.SetServiceDocumentUri(new Uri("http://example.com/"));
             var outputStream = new MemoryStream();
-            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
             container.GetRequiredService<ODataMessageWriterSettings>().EnableWritingKeyAsSegment = useKeyAsSegment;
 
             var responseMessage = new InMemoryMessage { Stream = outputStream, Container = container };

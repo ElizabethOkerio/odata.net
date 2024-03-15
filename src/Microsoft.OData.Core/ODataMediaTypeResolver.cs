@@ -6,11 +6,11 @@
 
 namespace Microsoft.OData
 {
-    using Microsoft.Extensions.DependencyInjection;
     #region Namespaces
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Microsoft.Extensions.DependencyInjection;
     #endregion Namespaces
 
     /// <summary>

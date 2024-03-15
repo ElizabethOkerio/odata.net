@@ -535,7 +535,7 @@ namespace Microsoft.OData.Tests.IntegrationTests.Reader.JsonLight
             const string payloadSuffix = "}";
             string payload = payloadPrefix + payloadBody + payloadSuffix;
 
-            var container = ServiceProviderBuilderHelper.BuildServiceProvider(null);
+            var container = ServiceProviderHelper.BuildServiceProvider(null);
             container.GetRequiredService<ODataMessageReaderSettings>().EnableReadingODataAnnotationWithoutPrefix = enableReadingODataAnnotationWithoutPrefix;
 
             var message = new InMemoryMessage() { Container = container };
