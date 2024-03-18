@@ -20,6 +20,9 @@ namespace Microsoft.OData.Tests
     public class ODataServiceCollectionExtensionsTests
     {
 
+        /// <summary>
+        /// Tests whether the AddDefaultODataServices method registers the correct services.
+        /// </summary>
         [Fact]
         public void AddDefaultODataServices_RegistersServicesCorrectly()
         {
@@ -52,16 +55,176 @@ namespace Microsoft.OData.Tests
             Assert.NotNull(scope.ServiceProvider.GetService<ODataUriParserSettings>());
         }
 
-        // [Fact]
-        // public void RentFromBufferShouldThrowsIfNullBufferReturns()
-        // {
-        //     // Arrange
-        //     Action test = () => BufferUtils.RentFromBuffer(new BadCharArrayPool(), 1024);
+        /// <summary>
+        /// Tests whether the AddDefaultODataServices method registers the correct services for the default OData 
+        /// version (<see cref="ODataVersion.V4" />).
+        /// </summary>
+        [Fact]
+        public void AddDefaultODataServices_ODataVersion_V4_IsDefault()
+        {
+            var services = new ServiceCollection();
+            services.AddDefaultODataServices();
+            Assert.True(services.Count == 11);
 
-        //     // Act & Assert
-        //     var exception = Assert.Throws<ODataException>(test);
-        //     Assert.Equal(Strings.BufferUtils_InvalidBufferOrSize(1024), exception.Message);
-        // }
+            var provider = services.BuildServiceProvider();
+            Assert.NotNull(provider);
+
+            // @robertmclaws: Test for request-scoped services.
+            var scope = provider.CreateScope();
+            Assert.NotNull(scope);
+            Assert.NotNull(scope.ServiceProvider);
+
+            var readerSettings = scope.ServiceProvider.GetService<ODataMessageReaderSettings>();
+            Assert.NotNull(readerSettings);
+            Assert.Equal(ODataVersion.V4, readerSettings.Version);
+            Assert.Equal(ODataVersion.V4, readerSettings.MaxProtocolVersion);
+
+            var writerSettings = scope.ServiceProvider.GetService<ODataMessageWriterSettings>();
+            Assert.NotNull(writerSettings);
+            Assert.Equal(ODataVersion.V4, writerSettings.Version);
+        }
+
+        /// <summary>
+        /// Tests whether the AddDefaultODataServices method registers the correct services when the using <see cref="ODataVersion.V401" />.
+        /// </summary>
+        [Fact]
+        public void AddDefaultODataServices_ODataVersion_V401_IsSetCorrectly()
+        {
+            var services = new ServiceCollection();
+            services.AddDefaultODataServices(ODataVersion.V401);
+            Assert.True(services.Count == 11);
+
+            var provider = services.BuildServiceProvider();
+            Assert.NotNull(provider);
+
+            // @robertmclaws: Test for request-scoped services.
+            var scope = provider.CreateScope();
+            Assert.NotNull(scope);
+            Assert.NotNull(scope.ServiceProvider);
+
+            var readerSettings = scope.ServiceProvider.GetService<ODataMessageReaderSettings>();
+            Assert.NotNull(readerSettings);
+            Assert.Equal(ODataVersion.V401, readerSettings.Version);
+            Assert.Equal(ODataVersion.V401, readerSettings.MaxProtocolVersion);
+
+            var writerSettings = scope.ServiceProvider.GetService<ODataMessageWriterSettings>();
+            Assert.NotNull(writerSettings);
+            Assert.Equal(ODataVersion.V401, writerSettings.Version);
+        }
+
+        /// <summary>
+        /// Tests whether the <see cref="ODataMessageReaderSettings" /> can be configured using the <see cref="Action{ODataMessageReaderSettings}" />.
+        /// </summary>
+        [Fact]
+        public void AddDefaultODataServices_ReaderSettings_CanConfigure()
+        {
+            var services = new ServiceCollection();
+            // @robertmclaws: Configure a setting that defaults to false.
+            services.AddDefaultODataServices(configureReaderAction: (reader) => reader.EnableCharactersCheck = true);
+            Assert.True(services.Count == 11);
+
+            var provider = services.BuildServiceProvider();
+            Assert.NotNull(provider);
+
+            // @robertmclaws: Test for request-scoped services.
+            var scope = provider.CreateScope();
+            Assert.NotNull(scope);
+            Assert.NotNull(scope.ServiceProvider);
+
+            var readerSettings = scope.ServiceProvider.GetService<ODataMessageReaderSettings>();
+            Assert.NotNull(readerSettings);
+            Assert.True(readerSettings.EnableCharactersCheck);
+        }
+
+        /// <summary>
+        /// Tests whether the <see cref="ODataMessageReaderSettings" /> can be configured using the <see cref="Action{ODataMessageWriterSettings}" />.
+        /// </summary>
+        [Fact]
+        public void AddDefaultODataServices_WriterSettings_CanConfigure()
+        {
+            var services = new ServiceCollection();
+            // @robertmclaws: Configure a setting that defaults to false.
+            services.AddDefaultODataServices(configureWriterAction: (writer) => writer.EnableCharactersCheck = true);
+            Assert.True(services.Count == 11);
+
+            var provider = services.BuildServiceProvider();
+            Assert.NotNull(provider);
+
+            // @robertmclaws: Test for request-scoped services.
+            var scope = provider.CreateScope();
+            Assert.NotNull(scope);
+            Assert.NotNull(scope.ServiceProvider);
+
+            var writerSettings = scope.ServiceProvider.GetService<ODataMessageWriterSettings>();
+            Assert.NotNull(writerSettings);
+            Assert.True(writerSettings.EnableCharactersCheck);
+        }
+
+        /// <summary>
+        /// Tests whether the <see cref="ODataUriParserSettings" /> can be configured using the <see cref="Action{ODataUriParserSettings}" />.
+        /// </summary>
+        [Fact]
+        public void AddDefaultODataServices_ODataUriParserSettings_CanConfigure()
+        {
+            var services = new ServiceCollection();
+            // @robertmclaws: Configure a setting that defaults to false.
+            services.AddDefaultODataServices(configureUriParserAction: (parser) => parser.MaximumExpansionCount = 1);
+            Assert.True(services.Count == 11);
+
+            var provider = services.BuildServiceProvider();
+            Assert.NotNull(provider);
+
+            // @robertmclaws: Test for request-scoped services.
+            var scope = provider.CreateScope();
+            Assert.NotNull(scope);
+            Assert.NotNull(scope.ServiceProvider);
+
+            var parserSettings = scope.ServiceProvider.GetService<ODataUriParserSettings>();
+            Assert.NotNull(parserSettings);
+            Assert.Equal(1, parserSettings.MaximumExpansionCount);
+        }
+
+        /// <summary>
+        /// Tests whether the correct exception is thrown when no <see cref="IServiceCollection" /> is provided.
+        /// </summary>
+        [Fact]
+        public void AddDefaultODataServices_NullServiceCollection_ThrowsNullReferenceException()
+        {
+            Action extension = () => ODataServiceCollectionExtensions.AddDefaultODataServices(null);
+
+            var exception = Assert.Throws<ArgumentNullException>(extension);
+            Assert.Equal("services", exception.ParamName);
+        }
+
+        /// <summary>
+        /// Tests whether specifically passing a null <see cref="Action{ODataMessageReaderSettings}" /> does not throw an exception.
+        /// </summary>
+        [Fact]
+        public void AddDefaultODataServices_NullReaderAction_DoesNotThrow()
+        {
+            var exception = Record.Exception(() => new ServiceCollection().AddDefaultODataServices(configureReaderAction: null));
+            Assert.Null(exception);
+        }
+
+        /// <summary>
+        /// Tests whether specifically passing a null <see cref="Action{ODataMessageWriterSettings}" /> does not throw an exception.
+        /// </summary>
+        [Fact]
+        public void AddDefaultODataServices_NullWriterAction_DoesNotThrow()
+        {
+            var exception = Record.Exception(() => new ServiceCollection().AddDefaultODataServices(configureWriterAction: null));
+            Assert.Null(exception);
+        }
+
+        /// <summary>
+        /// Tests whether specifically passing a null <see cref="Action{ODataUriParserSettings}" /> does not throw an exception.
+        /// </summary>
+        [Fact]
+        public void AddDefaultODataServices_NullUriParserAction_DoesNotThrow()
+        {
+            var exception = Record.Exception(() => new ServiceCollection().AddDefaultODataServices(configureUriParserAction: null));
+            Assert.Null(exception);
+        }
 
     }
 }

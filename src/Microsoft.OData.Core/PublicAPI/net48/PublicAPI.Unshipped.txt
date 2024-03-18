@@ -1,7 +1,7 @@
 Microsoft.OData.IContainerProvider
 Microsoft.OData.IContainerProvider.Container.get -> System.IServiceProvider
 Microsoft.Extensions.DependencyInjection.ODataServiceCollectionExtensions
-static Microsoft.Extensions.DependencyInjection.ODataServiceCollectionExtensions.AddDefaultODataServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.OData.ODataVersion odataVersion = Microsoft.OData.ODataVersion.V4, System.Action<Microsoft.OData.ODataMessageReaderSettings> configureReaderAction = null, System.Action<Microsoft.OData.ODataMessageWriterSettings> configureWriterAction = null, System.Action<Microsoft.OData.UriParser.ODataUriParserSettings> configureUriParserAction = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
+static Microsoft.Extensions.DependencyInjection.ODataServiceCollectionExtensions.AddDefaultODataServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.OData.ODataVersion oDataVersion = Microsoft.OData.ODataVersion.V4, System.Action<Microsoft.OData.ODataMessageReaderSettings> configureReaderAction = null, System.Action<Microsoft.OData.ODataMessageWriterSettings> configureWriterAction = null, System.Action<Microsoft.OData.UriParser.ODataUriParserSettings> configureUriParserAction = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
 Microsoft.OData.Json.DefaultJsonWriterFactory.CreateJsonWriter(System.IO.Stream stream, bool isIeee754Compatible, System.Text.Encoding encoding) -> Microsoft.OData.Json.IJsonWriter
 Microsoft.OData.Json.IJsonWriter.EndArrayScopeAsync() -> System.Threading.Tasks.Task
 Microsoft.OData.Json.IJsonWriter.EndObjectScopeAsync() -> System.Threading.Tasks.Task
