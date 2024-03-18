@@ -9,17 +9,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+#if NETCOREAPP
+using System.Text.Json;
+#endif
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OData.Core.Tests.DependencyInjection;
 using Microsoft.OData.Edm;
 using Microsoft.OData.Json;
 using Microsoft.Test.OData.Utils.ODataLibTest;
 using Xunit;
-using Microsoft.OData.Core.Tests.DependencyInjection;
-
-#if NETCOREAPP
-using System.Text.Json;
-#endif
 
 namespace Microsoft.OData.Tests.ScenarioTests.Roundtrip
 {
@@ -100,7 +99,7 @@ namespace Microsoft.OData.Tests.ScenarioTests.Roundtrip
         [Fact]
         public void InjectCustomJsonReader()
         {
-            RunReaderTest(builder => builder.AddSingleton<IJsonReaderFactory, TestJsonReaderFactory>(),
+            RunReaderTest(builder => builder.AddTransient<IJsonReaderFactory, TestJsonReaderFactory>(),
                 "<\"@context\":\"http://test/$metadata#People/$entity\",\"PersonId\":999,\"Name\":\"Jack\",>");
         }
 

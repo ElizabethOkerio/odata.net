@@ -121,9 +121,12 @@ namespace Microsoft.OData.Tests
 
             if (stringEscapeOption != null)
             {
-                IServiceCollection services = new ServiceCollection().AddDefaultODataServices();
-                services.AddSingleton(sp => new DefaultJsonWriterFactory(stringEscapeOption.Value));
-                request.Container = services.BuildServiceProvider();
+                IServiceProvider container = CreateTestServiceContainer(services =>
+                {
+                    services.AddSingleton(sp => new DefaultJsonWriterFactory(stringEscapeOption.Value));
+                });
+
+                request.Container = container;
             }
 
             settings.ODataUri.ServiceRoot = new Uri("http://host/service");

@@ -6,12 +6,6 @@
 
 namespace Microsoft.Test.OData.Services.ODataWCFService.DataSource
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Collections.ObjectModel;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.OData;
-    using Microsoft.OData.Edm;
     using Microsoft.OData.SampleService.Models.ODataSimplified;
 
     public class ODataSimplifiedDataSource : ODataReflectionDataSource
@@ -167,20 +161,6 @@ namespace Microsoft.Test.OData.Services.ODataWCFService.DataSource
         protected override IEdmModel CreateModel()
         {
             return ODataSimplifiedInMemoryModel.CreateModel("Microsoft.OData.SampleService.Models.ODataSimplified");
-        }
-
-        protected override void ConfigureContainer(IServiceCollection services)
-        {
-            var writerSettings = new ODataMessageWriterSettings();
-            writerSettings.SetOmitODataPrefix(true);
-
-            base.ConfigureContainer(services);
-            services.AddScoped(new ODataMessageReaderSettings()
-            {
-                EnableReadingODataAnnotationWithoutPrefix = true,
-            });
-
-            services.AddScoped(writerSettings);
         }
     }
 }

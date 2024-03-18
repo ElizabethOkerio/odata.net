@@ -13,74 +13,75 @@ namespace Microsoft.OData.Tests
 {
     public class ServiceProviderExtensionsTests
     {
-        private IServiceCollection Services;
+        private IServiceCollection services;
         public ServiceProviderExtensionsTests()
         {
-            Services = new ServiceCollection();
+            services = new ServiceCollection();
         }
+
         [Fact]
         public void GetNonExistingServiceGeneric()
         {
-            Services.AddTransient(typeof(Foo));
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient(typeof(Foo));
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.Null(container.GetService<IFoo>());
         }
 
         [Fact]
         public void GetServiceGeneric()
         {
-            Services.AddTransient(typeof(Foo));
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient(typeof(Foo));
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService<Foo>());
         }
 
         [Fact]
         public void GetServiceNonGeneric()
         {
-            Services.AddTransient(typeof(Foo));
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient(typeof(Foo));
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetService(typeof(Foo)));
         }
 
         [Fact]
         public void GetNonExistingRequiredServiceThrows()
         {
-            Services.AddTransient(typeof(Foo));
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient(typeof(Foo));
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.Throws<InvalidOperationException>(() => container.GetRequiredService<IFoo>());
         }
 
         [Fact]
         public void GetRequiredServiceGeneric()
         {
-            Services.AddTransient(typeof(Foo));
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient(typeof(Foo));
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetRequiredService<Foo>());
         }
 
         [Fact]
         public void GetRequiredServiceNonGeneric()
         {
-            Services.AddTransient(typeof(Foo));
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient(typeof(Foo));
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.NotNull(container.GetRequiredService(typeof(Foo)));
         }
 
         [Fact]
         public void GetServicesNonGeneric()
         {
-            Services.AddTransient<IFoo, Foo>();
-            Services.AddTransient<IFoo, Bar>();
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient<IFoo, Foo>();
+            services.AddTransient<IFoo, Bar>();
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.Equal(2, container.GetServices(typeof(IFoo)).Count());
         }
 
         [Fact]
         public void GetServicesGeneric()
         {
-            Services.AddTransient<IFoo, Foo>();
-            Services.AddTransient<IFoo, Bar>();
-            IServiceProvider container = Services.BuildServiceProvider();
+            services.AddTransient<IFoo, Foo>();
+            services.AddTransient<IFoo, Bar>();
+            IServiceProvider container = services.BuildServiceProvider();
             Assert.Equal(2, container.GetServices<IFoo>().Count());
         }
 

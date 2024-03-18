@@ -4,14 +4,14 @@
 // </copyright>
 //---------------------------------------------------------------------
 
-using System;
-using Microsoft.OData;
-using Microsoft.OData.Edm;
-using Microsoft.OData.Json;
-using Microsoft.OData.UriParser;
-
 namespace Microsoft.Extensions.DependencyInjection
 {
+    using System;
+    using Microsoft.OData;
+    using Microsoft.OData.Edm;
+    using Microsoft.OData.Json;
+    using Microsoft.OData.UriParser;
+
     /// <summary>
     /// Extension methods for <see cref="IServiceCollection"/>.
     /// </summary>
