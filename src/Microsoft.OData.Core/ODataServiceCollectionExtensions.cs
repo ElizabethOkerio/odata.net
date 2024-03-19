@@ -17,42 +17,58 @@ namespace Microsoft.Extensions.DependencyInjection
     /// </summary>
     public static class ODataServiceCollectionExtensions
     {
-        /// <summary>
-        /// Adds the default OData services to the <see cref="IServiceCollection"/>.
-        /// </summary>
-        /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
-        /// <returns>The <see cref="IServiceCollection"/> instance itself.</returns>
-        public static IServiceCollection AddDefaultODataServices(this IServiceCollection services)
-        {
-            return AddDefaultODataServices(services, ODataVersion.V4);
-        }
 
         /// <summary>
-        /// Adds the default OData services to the <see cref="IServiceCollection"/>.
+        /// Adds the default OData required services to a given <see cref="IServiceCollection" />.
         /// </summary>
-        /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
-        /// <param name="odataVersion">ODataVersion for the default services.</param>
-        /// <returns>The <see cref="IServiceCollection"/> instance itself</returns>
-        public static IServiceCollection AddDefaultODataServices(this IServiceCollection services, ODataVersion odataVersion)
+        /// <param name="services">The <see cref="IServiceCollection" /> instance to add OData's default services to.</param>
+        /// <param name="oDataVersion">An <see cref="ODataVersion" /> specifying which OData version to support. Defaults to <see cref="ODataVersion.V4" />.</param>
+        /// <param name="configureReaderAction">An <see cref="Action{ODataMessageReaderSettings}" /> that allows for configuring the default <see cref="ODataMessageReaderSettings" />.</param>
+        /// <param name="configureWriterAction">An <see cref="Action{ODataMessageWriterSettings}" /> that allows for configuring the default <see cref="ODataMessageWriterSettings" />.</param>
+        /// <param name="configureUriParserAction">An <see cref="Action{ODataUriParserSettings}" /> that allows for configuring the default <see cref="ODataUriParserSettings" />.</param>
+        /// <returns>The <see cref="IServiceCollection"/> instance we added OData services to, for fluent manipulation.</returns>
+        /// <remarks>This is usually called by OData platform libraries as a part of initializing runtime components of the OData platform.</remarks>
+        /// <exception cref="ArgumentNullException">Thrown if the <paramref name="services"/> parameter is <c>null</c>.</exception>
+        public static IServiceCollection AddDefaultODataServices(this IServiceCollection services,
+            ODataVersion oDataVersion = ODataVersion.V4, 
+            Action<ODataMessageReaderSettings> configureReaderAction = default, 
+            Action<ODataMessageWriterSettings> configureWriterAction = default,
+            Action<ODataUriParserSettings> configureUriParserAction = default)
         {
             if (services is null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
 
+            // Start by registering services that do not require execution state.
             services.AddSingleton<IJsonReaderFactory, DefaultJsonReaderFactory>();
             services.AddSingleton<IJsonWriterFactory, DefaultJsonWriterFactory>();
             services.AddSingleton(sp => ODataMediaTypeResolver.GetMediaTypeResolver(null));
-            services.AddScoped<ODataMessageInfo>();
-            services.AddScoped(sp => new ODataMessageReaderSettings(odataVersion));
-            services.AddScoped(sp => new ODataMessageWriterSettings(odataVersion));
             services.AddSingleton(sp => ODataPayloadValueConverter.GetPayloadValueConverter(null));
             services.AddSingleton<IEdmModel>(sp => EdmCoreModel.Instance);
             services.AddSingleton(sp => ODataUriResolver.GetUriResolver(null));
-            services.AddScoped<ODataUriParserSettings>();
+
+            // Now register services specific to a given request.
+            services.AddScoped<ODataMessageInfo>();
             services.AddScoped<UriPathParser>();
+
+            // Finally, register configurable settings.
+            // TODO: Should these ACTUALLY be scoped to a specific request? Are the settings being changed mid-request?
+            // TODO: Evaluate if using Options API here would allow for configuration in somewhere other than code.
+            var readerSettings = new ODataMessageReaderSettings(oDataVersion);
+            configureReaderAction?.Invoke(readerSettings);
+            services.AddScoped(sp => readerSettings);
+
+            var writerSettings = new ODataMessageWriterSettings(oDataVersion);
+            configureWriterAction?.Invoke(writerSettings);
+            services.AddScoped(sp => writerSettings);
+
+            var parserSettings = new ODataUriParserSettings();
+            configureUriParserAction?.Invoke(parserSettings);
+            services.AddScoped(sp => parserSettings);
 
             return services;
         }
+
     }
 }
