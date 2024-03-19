@@ -1,8 +1,8 @@
+Microsoft.Extensions.DependencyInjection.ODataServiceCollectionExtensions
 Microsoft.OData.IContainerProvider
 Microsoft.OData.IContainerProvider.Container.get -> System.IServiceProvider
 Microsoft.OData.Json.DefaultJsonWriterFactory.CreateJsonWriter(System.IO.Stream stream, bool isIeee754Compatible, System.Text.Encoding encoding) -> Microsoft.OData.Json.IJsonWriter
 Microsoft.OData.IODataRequestMessage.Url.set -> void
-Microsoft.Extensions.DependencyInjection.ODataServiceColectionExtensions
 Microsoft.OData.Json.IJsonWriter.EndArrayScopeAsync() -> System.Threading.Tasks.Task
 Microsoft.OData.Json.IJsonWriter.EndObjectScopeAsync() -> System.Threading.Tasks.Task
 Microsoft.OData.Json.IJsonWriter.EndPaddingFunctionScopeAsync() -> System.Threading.Tasks.Task
@@ -63,8 +63,8 @@ Microsoft.OData.ODataMessageWriterSettings.BufferSize.get -> int
 Microsoft.OData.ODataMessageWriterSettings.BufferSize.set -> void
 Microsoft.OData.UriParser.ODataUriParserSettings.EnableParsingKeyAsSegment.get -> bool
 Microsoft.OData.UriParser.ODataUriParserSettings.EnableParsingKeyAsSegment.set -> void
-static Microsoft.Extensions.DependencyInjection.ODataServiceColectionExtensions.AddOData(this Microsoft.Extensions.DependencyInjection.IServiceCollection services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
-static Microsoft.Extensions.DependencyInjection.ODataServiceColectionExtensions.AddOData(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.OData.ODataVersion odataVersion) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
+static Microsoft.Extensions.DependencyInjection.ODataServiceCollectionExtensions.AddDefaultODataServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
+static Microsoft.Extensions.DependencyInjection.ODataServiceCollectionExtensions.AddDefaultODataServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.OData.ODataVersion odataVersion) -> Microsoft.Extensions.DependencyInjection.IServiceCollection
 static Microsoft.OData.UriParser.ODataPathExtensions.TrimEndingTypeAndKeySegments(this Microsoft.OData.UriParser.ODataPath path) -> Microsoft.OData.UriParser.ODataPath
 override Microsoft.OData.ODataEnumValue.ToString() -> string
 override Microsoft.OData.ODataPrimitiveValue.ToString() -> string

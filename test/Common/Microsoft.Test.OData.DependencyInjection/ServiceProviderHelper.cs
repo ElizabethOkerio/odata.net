@@ -14,7 +14,7 @@ namespace Microsoft.OData.Core.Tests.DependencyInjection
         public static IServiceProvider BuildServiceProvider(Action<IServiceCollection> action)
         {
             IServiceCollection services = new ServiceCollection();
-            services.AddOData();
+            services.AddDefaultODataServices();
 
             action?.Invoke(services);
 

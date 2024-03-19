@@ -15,16 +15,16 @@ namespace Microsoft.Extensions.DependencyInjection
     /// <summary>
     /// Extension methods for <see cref="IServiceCollection"/>.
     /// </summary>
-    public static class ODataServiceColectionExtensions
+    public static class ODataServiceCollectionExtensions
     {
         /// <summary>
         /// Adds the default OData services to the <see cref="IServiceCollection"/>.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
         /// <returns>The <see cref="IServiceCollection"/> instance itself.</returns>
-        public static IServiceCollection AddOData(this IServiceCollection services)
+        public static IServiceCollection AddDefaultODataServices(this IServiceCollection services)
         {
-            return AddOData(services, ODataVersion.V4);
+            return AddDefaultODataServices(services, ODataVersion.V4);
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
         /// <param name="odataVersion">ODataVersion for the default services.</param>
         /// <returns>The <see cref="IServiceCollection"/> instance itself</returns>
-        public static IServiceCollection AddOData(this IServiceCollection services, ODataVersion odataVersion)
+        public static IServiceCollection AddDefaultODataServices(this IServiceCollection services, ODataVersion odataVersion)
         {
             if (services is null)
             {

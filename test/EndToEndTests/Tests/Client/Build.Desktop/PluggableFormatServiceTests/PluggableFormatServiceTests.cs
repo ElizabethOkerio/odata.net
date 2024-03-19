@@ -289,7 +289,7 @@ namespace Microsoft.Test.OData.Tests.Client.ODataWCFServiceTests
         private static void SetAvroMediaTypeResolver(HttpWebRequestMessage requestMessage)
         {
             IServiceCollection services = new ServiceCollection();
-            IServiceProvider serviceProvider = services.AddOData().BuildServiceProvider();
+            IServiceProvider serviceProvider = services.AddDefaultODataServices().BuildServiceProvider();
             requestMessage.Container = ServiceProviderHelper.BuildServiceProvider(builder =>
                 builder.AddSingleton<ODataMediaTypeResolver, AvroMediaTypeResolver>());
         }

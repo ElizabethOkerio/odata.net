@@ -149,7 +149,7 @@ namespace Microsoft.OData.Tests
         public void WriteTopLevelStringPropertyWithStringEscapeOnlyControlsOptionShouldWork()
         {
             var settings = new ODataMessageWriterSettings();
-            IServiceCollection services = new ServiceCollection().AddOData();
+            IServiceCollection services = new ServiceCollection().AddDefaultODataServices();
             services.AddSingleton<IJsonWriterFactory>(sp => new DefaultJsonWriterFactory(ODataStringEscapeOption.EscapeOnlyControls));
 
             settings.ODataUri.ServiceRoot = new Uri("http://host/service");
@@ -217,7 +217,7 @@ namespace Microsoft.OData.Tests
                 message: request,
                 configureServices: (containerBuilder) =>
                 {
-                    containerBuilder.AddOData();
+                    containerBuilder.AddDefaultODataServices();
                     containerBuilder.AddSingleton<IJsonWriterFactory>(sp => ODataUtf8JsonWriterFactory.Default);
                 });
 
@@ -1208,7 +1208,7 @@ namespace Microsoft.OData.Tests
         private static IServiceProvider CreateTestServiceContainer(Action<IServiceCollection> configureServices)
         {
             IServiceCollection services = new ServiceCollection();
-            services.AddOData();
+            services.AddDefaultODataServices();
 
             configureServices?.Invoke(services);
 

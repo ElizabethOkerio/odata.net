@@ -565,7 +565,7 @@ namespace Microsoft.OData.Tests.IntegrationTests.Writer.JsonLight
             var message = new InMemoryMessage() { Stream = new MemoryStream() };
             if (stringEscapeOption != null)
             {
-                IServiceCollection services = new ServiceCollection().AddOData();
+                IServiceCollection services = new ServiceCollection().AddDefaultODataServices();
                 services.AddSingleton<IJsonWriterFactory>(sp => new DefaultJsonWriterFactory(stringEscapeOption.Value));
                 message.Container = services.BuildServiceProvider();
             }

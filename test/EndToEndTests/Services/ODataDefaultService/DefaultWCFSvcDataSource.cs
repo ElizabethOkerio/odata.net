@@ -1206,24 +1206,5 @@ namespace Microsoft.Test.OData.Services.ODataWCFService
         {
             return DefaultInMemoryModel.CreateODataServiceModel("Microsoft.Test.OData.Services.ODataWCFService");
         }
-
-        protected override void ConfigureContainer(IServiceCollection services)
-        {
-            base.ConfigureContainer(services);
-            services.AddScoped(new ODataMessageWriterSettings()
-            {
-                EnableReadingKeyAsSegment = false,
-            });
-
-            services.AddScoped(new ODataMessageWriterSettings()
-            {
-                EnableWritingKeyAsSegment = false,
-            });
-
-            services.AddScoped(new ODataUriParserSettings()
-            {
-                EnableParsingKeyAsSegmentUrl = false,
-            });
-        }
     }
 }
