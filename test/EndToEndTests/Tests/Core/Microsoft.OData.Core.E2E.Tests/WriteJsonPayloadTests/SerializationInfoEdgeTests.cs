@@ -15,6 +15,10 @@ using Microsoft.OData.Edm;
 
 namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
 {
+    /// <summary>
+    /// This class tests OData serialization behavior, particularly
+    /// how OData payloads are written when serialization information is either included or omitted
+    /// </summary>
     public class SerializationInfoEdgeTests : EndToEndTestBase<SerializationInfoEdgeTests.TestsStartup>
     {
         private readonly Uri _baseUri;
@@ -40,133 +44,271 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
         }
 
         /// <summary>
-        /// Write payloads without model or serialization info.
-        /// Note that ODL will succeed if writing requests or writing nometadata reponses.
+        /// Writing an OData entry without serialization info when metadata is included should throw an exception.
         /// </summary>
         [Theory]
         [InlineData(MimeTypeODataParameterFullMetadata)]
         [InlineData(MimeTypeODataParameterMinimalMetadata)]
-        [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task WriteWithoutSerializationInfo(string mimeType)
+        public async Task WriteEntryWithoutSerializationInfo_WithMetadata_ShouldThrow(string mimeType)
         {
-            var settings = new ODataMessageWriterSettings
-            {
-                ODataUri = new ODataUri() { ServiceRoot = _baseUri },
-                EnableMessageStreamDisposal = false
-            };
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
 
-            // write entry without serialization info
-            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
-            {
-                var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
-                var entry = this.CreatePersonEntryWithoutSerializationInfo();
-                var expectedError = mimeType.Contains(MimeTypes.ODataParameterNoMetadata)
-                    ? null
-                    : Error.Format(SRResources.ODataContextUriBuilder_NavigationSourceOrTypeNameMissingForResourceOrResourceSet);
-                await AssertThrowsAsync<ODataException>((async () => await odataWriter.WriteStartAsync(entry)), expectedError);
-            }
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+            var entry = CreatePersonEntryWithoutSerializationInfo();
 
-            // write feed without serialization info
-            responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
-            {
-                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
-                var feed = this.CreatePersonFeed();
-                var entry = this.CreatePersonEntryWithoutSerializationInfo();
-                entry.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "People", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
-                var expectedError = mimeType.Contains(MimeTypes.ODataParameterNoMetadata)
-                    ? null
-                    : Error.Format(SRResources.ODataContextUriBuilder_NavigationSourceOrTypeNameMissingForResourceOrResourceSet);
-                await AssertThrowsAsync<ODataException>(async () => await odataWriter.WriteStartAsync(feed), expectedError);
-            }
+            var expectedError = Error.Format(SRResources.ODataContextUriBuilder_NavigationSourceOrTypeNameMissingForResourceOrResourceSet);
 
-            // write collection without serialization info
-            responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
-            {
-                var odataWriter = await messageWriter.CreateODataCollectionWriterAsync();
-                var collectionStart = new ODataCollectionStart() { Name = "BackupContactInfo" };
-                var expectedError = mimeType.Contains(MimeTypes.ODataParameterNoMetadata)
-                    ? null
-                    : Error.Format(SRResources.ODataContextUriBuilder_TypeNameMissingForTopLevelCollection);
-                await AssertThrowsAsync<ODataException>(async () => await odataWriter.WriteStartAsync(collectionStart), expectedError);
-            }
-
-            // write a reference link without serialization info
-            responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
-            {
-                var link = new ODataEntityReferenceLink() { Url = new Uri(_baseUri + "Orders(-10)") };
-                await messageWriter.WriteEntityReferenceLinkAsync(link);
-
-                // No exception is expected. Simply verify the writing succeeded.
-                if (!mimeType.Contains(MimeTypes.ODataParameterNoMetadata))
-                {
-                    Stream stream = await responseMessageWithoutModel.GetStreamAsync();
-                    Assert.Contains("$metadata#$ref", await TestsHelper.ReadStreamContentAsync(stream));
-                }
-            }
-
-            // write reference links without serialization info
-            responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
-            {
-                var links = new ODataEntityReferenceLinks()
-                {
-                    Links = new[]
-                    {
-                        new ODataEntityReferenceLink(){Url = new Uri(_baseUri + "Orders(-10)")}
-                    },
-                };
-
-                await messageWriter.WriteEntityReferenceLinksAsync(links);
-
-                // No exception is expected. Simply verify the writing succeeded.
-                if (!mimeType.Contains(MimeTypes.ODataParameterNoMetadata))
-                {
-                    Stream stream = await responseMessageWithoutModel.GetStreamAsync();
-                    Assert.Contains("$metadata#Collection($ref)", (await TestsHelper.ReadStreamContentAsync(stream)));
-                }
-            }
-
-            // write request message containing an entry
-            var requestMessageWithoutModel = new TestStreamRequestMessage(new MemoryStream(),new Uri(_baseUri + "People"), "POST");
-            requestMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            using (var messageWriter = new ODataMessageWriter(requestMessageWithoutModel, settings))
-            {
-                var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
-                var entry = this.CreatePersonEntryWithoutSerializationInfo();
-                await odataWriter.WriteStartAsync(entry);
-                await odataWriter.WriteEndAsync();
-                Stream stream = await requestMessageWithoutModel.GetStreamAsync();
-                Assert.Contains("People(-5)\",\"PersonId\":-5,\"Name\":\"xhsdckkeqzvlnprheujeycqrglfehtdocildrequohlffazfgtvmddyqsaxrojqxrsckohrakdxlrghgmzqnyruzu\"", await TestsHelper.ReadStreamContentAsync(stream));
-            }
+            var exception = await Assert.ThrowsAsync<ODataException>(async () => await odataWriter.WriteStartAsync(entry));
+            Assert.Equal(expectedError, exception.Message);
         }
 
         /// <summary>
-        /// Specify serialization info for both feed and entry should fail.
+        /// Writing an OData entry without serialization info when no metadata is provided should not throw an exception.
+        /// </summary>
+        [Fact]
+        public async Task WriteEntryWithoutSerializationInfo_NoMetadata_ShouldNotThrow()
+        {
+            var mimeType = MimeTypeODataParameterNoMetadata;
+
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+            var entry = CreatePersonEntryWithoutSerializationInfo();
+
+            // No exception should be thrown when writing without metadata
+            await odataWriter.WriteStartAsync(entry);
+            await odataWriter.WriteEndAsync();
+        }
+
+        /// <summary>
+        /// Writing a feed without serialization info should throw an exception for metadata.
+        /// </summary>
+        [Theory]
+        [InlineData(MimeTypeODataParameterFullMetadata)]
+        [InlineData(MimeTypeODataParameterMinimalMetadata)]
+        public async Task WriteFeedWithoutSerializationInfo_WithMetadata_ShouldThrow(string mimeType)
+        {
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+            var feed = CreatePersonFeed();
+            var entry = CreatePersonEntryWithoutSerializationInfo();
+
+            entry.SetSerializationInfo(new ODataResourceSerializationInfo()
+            {
+                NavigationSourceName = "People",
+                NavigationSourceEntityTypeName = NameSpacePrefix + "Person"
+            });
+
+            var expectedError = Error.Format(SRResources.ODataContextUriBuilder_NavigationSourceOrTypeNameMissingForResourceOrResourceSet);
+            var exception = await Assert.ThrowsAsync<ODataException>(async () => await odataWriter.WriteStartAsync(feed));
+            Assert.Equal(expectedError, exception.Message);
+        }
+
+        /// <summary>
+        /// Writing a feed without serialization info should succeed when no metadata is used.
+        /// </summary>
+        [Fact]
+        public async Task WriteFeedWithoutSerializationInfo_NoMetadata_ShouldSucceed()
+        {
+            string mimeType = MimeTypeODataParameterNoMetadata; // Explicitly use NoMetadata
+
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+            var feed = CreatePersonFeed();
+            var entry = CreatePersonEntryWithoutSerializationInfo();
+
+            entry.SetSerializationInfo(new ODataResourceSerializationInfo()
+            {
+                NavigationSourceName = "People",
+                NavigationSourceEntityTypeName = NameSpacePrefix + "Person"
+            });
+
+            // No exception should be thrown
+            await odataWriter.WriteStartAsync(feed);
+            await odataWriter.WriteEndAsync();
+        }
+
+        /// <summary>
+        /// Writing a collection without serialization info when metadata is included should throw an exception.
+        /// </summary>
+        [Theory]
+        [InlineData(MimeTypeODataParameterFullMetadata)]
+        [InlineData(MimeTypeODataParameterMinimalMetadata)]
+        public async Task WriteCollectionWithoutSerializationInfo_WithMetadata_ShouldThrow(string mimeType)
+        {
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataCollectionWriterAsync();
+            var collectionStart = new ODataCollectionStart() { Name = "BackupContactInfo" };
+
+            var expectedError = Error.Format(SRResources.ODataContextUriBuilder_TypeNameMissingForTopLevelCollection);
+
+            var exception = await Assert.ThrowsAsync<ODataException>(async () => await odataWriter.WriteStartAsync(collectionStart));
+            Assert.Equal(expectedError, exception.Message);
+        }
+
+        /// <summary>
+        /// Writing a collection without serialization info when no metadata is provided should not throw an exception.
+        /// </summary>
+        [Fact]
+        public async Task WriteCollectionWithoutSerializationInfo_NoMetadata_ShouldNotThrow()
+        {
+            var mimeType = MimeTypeODataParameterNoMetadata;
+
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataCollectionWriterAsync();
+            var collectionStart = new ODataCollectionStart() { Name = "BackupContactInfo" };
+
+            // No exception should be thrown when writing without metadata
+            await odataWriter.WriteStartAsync(collectionStart);
+            await odataWriter.WriteEndAsync();
+        }
+
+        /// <summary>
+        /// Writing a single reference link without serialization info with metadata should contain metadata reference.
+        /// </summary>
+        [Theory]
+        [InlineData(MimeTypeODataParameterFullMetadata)]
+        [InlineData(MimeTypeODataParameterMinimalMetadata)]
+        public async Task WriteReferenceLinkWithoutSerializationInfo_WithMetadata_ShouldContainMetadataReference(string mimeType)
+        {
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var link = new ODataEntityReferenceLink() { Url = new Uri(_baseUri + "Orders(-10)") };
+            await messageWriter.WriteEntityReferenceLinkAsync(link);
+
+            Stream stream = await responseMessage.GetStreamAsync();
+            string result = await TestsHelper.ReadStreamContentAsync(stream);
+
+            Assert.Contains("$metadata#$ref", result);
+        }
+
+        /// <summary>
+        /// Writing a single reference link without serialization info with no metadata should not contain metadata reference.
+        /// </summary>
+        [Fact]
+        public async Task WriteReferenceLinkWithoutSerializationInfo_NoMetadata_ShouldNotContainMetadataReference()
+        {
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(MimeTypeODataParameterNoMetadata);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var link = new ODataEntityReferenceLink() { Url = new Uri(_baseUri + "Orders(-10)") };
+            await messageWriter.WriteEntityReferenceLinkAsync(link);
+
+            Stream stream = await responseMessage.GetStreamAsync();
+            string result = await TestsHelper.ReadStreamContentAsync(stream);
+
+            Assert.DoesNotContain("$metadata#$ref", result);
+        }
+
+        /// <summary>
+        /// Writing an OData request message containing an entry with metadata should contain expected content.
         /// </summary>
         [Theory]
         [InlineData(MimeTypeODataParameterFullMetadata)]
         [InlineData(MimeTypeODataParameterMinimalMetadata)]
         [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task SpecifySerializationInfoForFeedAndEntry(string mimeType)
+        public async Task WriteRequestMessageWithEntry_ShouldContainExpectedContent(string mimeType)
         {
-            var settings = new ODataMessageWriterSettings();
-            settings.ODataUri = new ODataUri() { ServiceRoot = _baseUri };
+            var settings = CreateODataMessageWriterSettings();
+            var requestMessage = new TestStreamRequestMessage(new MemoryStream(), new Uri(_baseUri + "People"), "POST");
+            requestMessage.SetHeader("Content-Type", mimeType);
 
-            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
+            using var messageWriter = new ODataMessageWriter(requestMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+            var entry = CreatePersonEntryWithoutSerializationInfo();
+
+            await odataWriter.WriteStartAsync(entry);
+            await odataWriter.WriteEndAsync();
+
+            Stream stream = await requestMessage.GetStreamAsync();
+            string result = await TestsHelper.ReadStreamContentAsync(stream);
+
+            Assert.Contains("People(-5)\",\"PersonId\":-5,\"Name\":\"xhsdckkeqzvlnprheujeycqrglfehtdocildrequohlffazfgtvmddyqsaxrojqxrsckohrakdxlrghgmzqnyruzu\"", result);
+        }
+
+        /// <summary>
+        /// Verify that specifying serialization info for both feed and entry fails as expected.
+        /// This test ensures that when both a feed and an entry specify serialization information, 
+        /// it leads to an error or unexpected behavior, as OData serialization should not allow 
+        /// conflicting metadata definitions. The test also verifies the expected metadata output 
+        /// for different MIME types.
+        /// </summary>
+        [Theory]
+        [InlineData(MimeTypeODataParameterFullMetadata)]
+        [InlineData(MimeTypeODataParameterMinimalMetadata)]
+        public async Task SpecifyingSerializationInfoForBothFeedAndEntry_WithMetadata_ShouldFail(string mimeType)
+        {
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using (var messageWriter = new ODataMessageWriter(responseMessage, settings))
             {
                 var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
-                var feed = this.CreatePersonFeed();
+                var feed = CreatePersonFeed();
+                feed.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "People", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
+
+                var entry = new ODataResource()
+                {
+                    Id = new Uri(_baseUri + "People(-5)"),
+                    TypeName = NameSpacePrefix + "Employee"
+                };
+
+                var personEntryP1 = new ODataProperty { Name = "PersonId", Value = -5 };
+                var personEntryP2 = new ODataProperty
+                {
+                    Name = "Name",
+                    Value = "xhsdckkeqzvlnprheujeycqrglfehtdocildrequohlffazfgtvmddyqsaxrojqxrsckohrakdxlrghgmzqnyruzu"
+                };
+
+                var personEntryP3 = new ODataProperty { Name = "ManagersPersonId", Value = -465010984 };
+
+                entry.Properties = new[] { personEntryP1, personEntryP2, personEntryP3 };
+                entry.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "Person", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
+
+
+                await odataWriter.WriteStartAsync(feed);
+                await odataWriter.WriteStartAsync(entry);
+                await odataWriter.WriteEndAsync();
+                await odataWriter.WriteEndAsync();
+            }
+
+            Stream stream = await responseMessage.GetStreamAsync();
+            string result = await TestsHelper.ReadStreamContentAsync(stream);
+            Assert.Contains(NameSpacePrefix + "Employee", result);
+            Assert.Contains("$metadata#People", result);
+        }
+
+        [Fact]
+        public async Task SpecifyingSerializationInfoForBothFeedAndEntry_WithoutMetadata_ShouldFail()
+        {
+            var settings = CreateODataMessageWriterSettings();
+
+            var mimeType = MimeTypeODataParameterNoMetadata;
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using (var messageWriter = new ODataMessageWriter(responseMessage, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+                var feed = CreatePersonFeed();
                 feed.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "People", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
 
                 var entry = new ODataResource()
@@ -191,244 +333,400 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
                 await odataWriter.WriteStartAsync(entry);
                 await odataWriter.WriteEndAsync();
                 await odataWriter.WriteEndAsync();
-                Stream stream = await responseMessageWithoutModel.GetStreamAsync();
-                string result = await TestsHelper.ReadStreamContentAsync(stream);
-                if (!mimeType.Contains(MimeTypes.ODataParameterNoMetadata))
-                {
-                    Assert.Contains(NameSpacePrefix + "Employee", result);
-                    Assert.Contains("$metadata#People", result);
-                }
-                else
-                {
-                    Assert.DoesNotContain(NameSpacePrefix + "Employee", result);
-                }
             }
+
+            Stream stream = await responseMessage.GetStreamAsync();
+            string result = await TestsHelper.ReadStreamContentAsync(stream);
+            Assert.DoesNotContain(NameSpacePrefix + "Employee", result);
         }
 
-        /// <summary>
-        /// Write response payload with serialization info containing wrong values
-        /// </summary>
         [Theory]
         [InlineData(MimeTypeODataParameterFullMetadata)]
         [InlineData(MimeTypeODataParameterMinimalMetadata)]
-        [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task WriteEntryWithWrongSerializationInfo(string mimeType)
+        public async Task WritingAnEntryWithWrongEntitySetName_WithMetadata_ShouldGenerateIncorrectMetadata(string mimeType)
+        {
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+            var entry = CreatePersonEntryWithoutSerializationInfo();
+            entry.SetSerializationInfo(new ODataResourceSerializationInfo
+            {
+                NavigationSourceName = "Parsen",
+                NavigationSourceEntityTypeName = NameSpacePrefix + "Person"
+            });
+
+            await odataWriter.WriteStartAsync(entry);
+            await odataWriter.WriteEndAsync();
+            var result = await TestsHelper.ReadStreamContentAsync(await responseMessage.GetStreamAsync());
+
+            Assert.Contains("\"PersonId\":-5", result);
+            Assert.Contains("$metadata#Parsen/$entity", result);
+            Assert.Contains("People(-5)\",\"PersonId\":-5", result);
+        }
+
+        [Fact]
+        public async Task WritingAnEntryWithWrongEntitySetName_WithoutMetadata_ShouldNotWriteMetadata()
+        {
+            var mimeType = MimeTypeODataParameterNoMetadata;
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+            var entry = CreatePersonEntryWithoutSerializationInfo();
+            entry.SetSerializationInfo(new ODataResourceSerializationInfo
+            {
+                NavigationSourceName = "Parsen",
+                NavigationSourceEntityTypeName = NameSpacePrefix + "Person"
+            });
+
+            await odataWriter.WriteStartAsync(entry);
+            await odataWriter.WriteEndAsync();
+            var result = await TestsHelper.ReadStreamContentAsync(await responseMessage.GetStreamAsync());
+
+            Assert.Contains("\"PersonId\":-5", result);
+            Assert.DoesNotContain("People(-5)\",\"PersonId\":-5", result);
+        }
+
+        [Theory]
+        [InlineData(MimeTypeODataParameterFullMetadata)]
+        [InlineData(MimeTypeODataParameterMinimalMetadata)]
+        public async Task WritingAFeedWithAWrongEntitySetName_WithMetadata_ShouldGenerateIncorrectMetadata(string mimeType)
+        {
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+
+            var feed = this.CreatePersonFeed();
+            feed.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "Parsen", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
+            var entry = this.CreatePersonEntryWithoutSerializationInfo();
+            await odataWriter.WriteStartAsync(feed);
+            await odataWriter.WriteStartAsync(entry);
+            await odataWriter.WriteEndAsync();
+            await odataWriter.WriteEndAsync();
+            var result = await TestsHelper.ReadStreamContentAsync(await responseMessage.GetStreamAsync());
+
+            Assert.Contains("\"PersonId\":-5", result);
+            Assert.Contains("$metadata#Parsen\"", result);
+            Assert.Contains("People(-5)\",\"PersonId\":-5", result);
+        }
+
+        [Fact]
+        public async Task WritingAFeedWithAWrongEntitySetName_WithoutMetadata_ShouldNotWriteMetadata()
+        {
+            var mimeType = MimeTypeODataParameterNoMetadata;
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+
+            var feed = this.CreatePersonFeed();
+            feed.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "Parsen", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
+            var entry = this.CreatePersonEntryWithoutSerializationInfo();
+            await odataWriter.WriteStartAsync(feed);
+            await odataWriter.WriteStartAsync(entry);
+            await odataWriter.WriteEndAsync();
+            await odataWriter.WriteEndAsync();
+            var result = await TestsHelper.ReadStreamContentAsync(await responseMessage.GetStreamAsync());
+
+            Assert.Contains("\"PersonId\":-5", result);
+            Assert.DoesNotContain("People(-5)\",\"PersonId\":-5", result);
+        }
+
+        [Theory]
+        [InlineData(MimeTypeODataParameterFullMetadata)]
+        [InlineData(MimeTypeODataParameterMinimalMetadata)]
+        public async Task WritingAComplexCollectionWithWrongTypeName_WithMetadata_ShouldIncludeIncorrectTypeNameInMetadata(string mimeType)
+        {
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+
+            var complexCollection = new ODataResourceSetWrapper
+            {
+                ResourceSet = new ODataResourceSet(),
+                Resources = new List<ODataResourceWrapper>
+                {
+                    TestsHelper.CreatePrimaryContactODataWrapper()
+                }
+            };
+
+            complexCollection.ResourceSet.SetSerializationInfo(new ODataResourceSerializationInfo
+            {
+                ExpectedTypeName = NameSpacePrefix + "ContactDETAIL"
+            });
+
+            await ODataWriterHelper.WriteResourceSetAsync(odataWriter, complexCollection);
+            var result = await TestsHelper.ReadStreamContentAsync(await responseMessage.GetStreamAsync());
+
+            Assert.Contains("\"value\":[{\"@odata.type\":\"#Microsoft.OData.E2E.TestCommon.Common.Server.EndToEnd.ContactDetails\",\"EmailBag", result);
+            Assert.Contains("$metadata#Collection(" + NameSpacePrefix + "ContactDETAIL)", result);
+        }
+
+        [Fact]
+        public async Task WritingComplexCollectionWithWrongTypeName_WithoutMetadata_ShouldNotIncludeTypeNameInResponse()
+        {
+            var mimeType = MimeTypeODataParameterNoMetadata;
+            var settings = CreateODataMessageWriterSettings();
+            var responseMessage = CreateTestResponseMessage(mimeType);
+
+            using var messageWriter = new ODataMessageWriter(responseMessage, settings);
+            var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+
+            var complexCollection = new ODataResourceSetWrapper
+            {
+                ResourceSet = new ODataResourceSet(),
+                Resources = new List<ODataResourceWrapper>
+            {
+                TestsHelper.CreatePrimaryContactODataWrapper()
+            }
+            };
+
+            complexCollection.ResourceSet.SetSerializationInfo(new ODataResourceSerializationInfo
+            {
+                ExpectedTypeName = NameSpacePrefix + "ContactDETAIL"
+            });
+
+            await ODataWriterHelper.WriteResourceSetAsync(odataWriter, complexCollection);
+            var result = await TestsHelper.ReadStreamContentAsync(await responseMessage.GetStreamAsync());
+
+            Assert.DoesNotContain("\"@odata.type\":\"#Microsoft.OData.E2E.TestCommon.Common.Server.EndToEnd.ContactDetails\"", result);
+        }
+
+        [Theory]
+        [InlineData(MimeTypeODataParameterFullMetadata)]
+        [InlineData(MimeTypeODataParameterMinimalMetadata)]
+        public async Task WritingAnEntryWithWrongSerializationInfo_WithEdmModelAndMetadata_ShouldIncludeIncorrectMetadata(string mimeType)
         {
             var settings = new ODataMessageWriterSettings();
             settings.ODataUri = new ODataUri() { ServiceRoot = _baseUri };
 
-            // wrong EntitySetName for entry
             var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
             responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+
+            var personType = _model.FindDeclaredType(NameSpacePrefix + "Person") as IEdmEntityType;
+            var peopleSet = _model.EntityContainer.FindEntitySet("People");
+
+            using var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings, _model);
+            var odataWriter = await messageWriter.CreateODataResourceWriterAsync(peopleSet, personType);
+            var entry = this.CreatePersonEntryWithoutSerializationInfo();
+
+            entry.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "Parsen", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
+            await odataWriter.WriteStartAsync(entry);
+            await odataWriter.WriteEndAsync();
+            var result = await TestsHelper.ReadStreamContentAsync(await responseMessageWithoutModel.GetStreamAsync());
+            Assert.Contains("\"PersonId\":-5", result);
+            Assert.Contains("$metadata#Parsen/$entity", result); // Expecting incorrect metadata
+        }
+
+        [Fact]
+        public async Task WritingAnEntryWithWrongSerializationInfo_WithEdmModelAndNoMetadata_ShouldNotIncludeMetadata()
+        {
+            var mimeType = MimeTypeODataParameterNoMetadata;
+            var settings = new ODataMessageWriterSettings
+            {
+                ODataUri = new ODataUri() { ServiceRoot = _baseUri }
+            };
+
+            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+
+            var personType = _model.FindDeclaredType(NameSpacePrefix + "Person") as IEdmEntityType;
+            var peopleSet = _model.EntityContainer.FindEntitySet("People");
+
+            using var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings, _model);
+            var odataWriter = await messageWriter.CreateODataResourceWriterAsync(peopleSet, personType);
+            var entry = this.CreatePersonEntryWithoutSerializationInfo();
+
+            entry.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "Parsen", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
+            await odataWriter.WriteStartAsync(entry);
+            await odataWriter.WriteEndAsync();
+            var result = await TestsHelper.ReadStreamContentAsync(await responseMessageWithoutModel.GetStreamAsync());
+            Assert.Contains("\"PersonId\":-5", result);
+            Assert.DoesNotContain("$metadata", result); // No metadata should be present
+        }
+
+        [Theory]
+        [InlineData(MimeTypeODataParameterFullMetadata)]
+        [InlineData(MimeTypeODataParameterMinimalMetadata)]
+        public async Task ChangingSerializationInfoAfterWriteStart_WithMetadata_ShouldUseOriginalMetadata(string mimeType)
+        {
+            var settings = new ODataMessageWriterSettings();
+            settings.ODataUri = new ODataUri() { ServiceRoot = _baseUri };
+
+            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+
             using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
             {
                 var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
                 var entry = this.CreatePersonEntryWithoutSerializationInfo();
 
-                entry.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "Parsen", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
-                await odataWriter.WriteStartAsync(entry);
-                await odataWriter.WriteEndAsync();
-                var result = await TestsHelper.ReadStreamContentAsync(responseMessageWithoutModel.GetStream());
-                Assert.Contains("\"PersonId\":-5", result);
-                if (!mimeType.Contains(MimeTypes.ODataParameterNoMetadata))
-                {
-                    // no metadata does not write odata.metadata
-                    Assert.Contains("$metadata#Parsen/$entity", result);
-                    Assert.Contains("People(-5)\",\"PersonId\":-5", result);
-                }
-                else
-                {
-                    Assert.DoesNotContain("People(-5)\",\"PersonId\":-5", result);
-                }
-            }
-
-            // wrong EntitySetName for feed
-            responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
-            {
-                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
-
-                var feed = this.CreatePersonFeed();
-                feed.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "Parsen", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
-                var entry = this.CreatePersonEntryWithoutSerializationInfo();
-                await odataWriter.WriteStartAsync(feed);
-                await odataWriter.WriteStartAsync(entry);
-                await odataWriter.WriteEndAsync();
-                await odataWriter.WriteEndAsync();
-                var result = await TestsHelper.ReadStreamContentAsync(await responseMessageWithoutModel.GetStreamAsync());
-
-                Assert.Contains("\"PersonId\":-5", result);
-
-                if (!mimeType.Contains(MimeTypes.ODataParameterNoMetadata))
-                {
-                    // no metadata does not write odata.metadata
-                    Assert.Contains("$metadata#Parsen\"", result);
-                    Assert.Contains("People(-5)\",\"PersonId\":-5", result);
-                }
-                else
-                {
-                    Assert.DoesNotContain("People(-5)\",\"PersonId\":-5", result);
-                }
-            }
-
-            // wrong complex collection type name
-            responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-
-            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
-            {
-                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
-                var complexCollection = new ODataResourceSetWrapper()
-                {
-                    ResourceSet = new ODataResourceSet(),
-                    Resources = new List<ODataResourceWrapper>()
-                        {
-                            TestsHelper.CreatePrimaryContactODataWrapper()
-                        }
-                };
-
-                complexCollection.ResourceSet.SetSerializationInfo(new ODataResourceSerializationInfo()
-                {
-                    ExpectedTypeName = NameSpacePrefix + "ContactDETAIL"
-                });
-
-                await ODataWriterHelper.WriteResourceSetAsync(odataWriter, complexCollection);
-                var result = await TestsHelper.ReadStreamContentAsync(responseMessageWithoutModel.GetStream());
-
-                if (!mimeType.Contains(MimeTypes.ODataParameterNoMetadata))
-                {
-                    // [{"@odata.type":"#Microsoft.Test.OData.Services.AstoriaDefaultService.ContactDetails","EmailBag@odata.type":"#Collection(String)"...
-                    Assert.Contains("\"value\":[{\"@odata.type\":\"#Microsoft.OData.E2E.TestCommon.Common.Server.EndToEnd.ContactDetails\",\"EmailBag", result);
-
-                    // no metadata does not write odata.metadata
-                    Assert.Contains("$metadata#Collection(" + NameSpacePrefix + "ContactDETAIL)", result);
-                }
-                else
-                {
-                    Assert.DoesNotContain("\"@odata.type\":\"#Microsoft.OData.E2E.TestCommon.Common.Server.EndToEnd.ContactDetails\"", result);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Provide EDM model, and then write an entry with wrong serialization info
-        /// </summary>
-        [Theory]
-        [InlineData(MimeTypeODataParameterFullMetadata)]
-        [InlineData(MimeTypeODataParameterMinimalMetadata)]
-        [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task WriteEntryWithWrongSerializationInfoWithModel(string mimeType)
-        {
-            bool[] autoComputeMetadataBools = new bool[] { true, false, };
-
-            foreach (var autoComputeMetadata in autoComputeMetadataBools)
-            {
-                var settings = new ODataMessageWriterSettings();
-                settings.ODataUri = new ODataUri() { ServiceRoot = _baseUri };
-
-                var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-                responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-
-                var personType = _model.FindDeclaredType(NameSpacePrefix + "Person") as IEdmEntityType;
-                var peopleSet = _model.EntityContainer.FindEntitySet("People");
-
-                using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings, _model))
-                {
-                    var odataWriter = await messageWriter.CreateODataResourceWriterAsync(peopleSet, personType);
-                    var entry = this.CreatePersonEntryWithoutSerializationInfo();
-
-                    entry.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "Parsen", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
-                    await odataWriter.WriteStartAsync(entry);
-                    await odataWriter.WriteEndAsync();
-                    var result = await TestsHelper.ReadStreamContentAsync(responseMessageWithoutModel.GetStream());
-                    Assert.Contains("\"PersonId\":-5", result);
-                    if (!mimeType.Contains(MimeTypes.ODataParameterNoMetadata))
-                    {
-                        // no metadata does not write odata.metadata
-                        Assert.Contains("$metadata#Parsen/$entity", result);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Change serialization info value after WriteStart
-        /// </summary>
-        [Theory]
-        [InlineData(MimeTypeODataParameterFullMetadata)]
-        [InlineData(MimeTypeODataParameterMinimalMetadata)]
-        [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task ChangeSerializationInfoAfterWriteStart(string mimeType)
-        {
-            var settings = new ODataMessageWriterSettings();
-            settings.ODataUri = new ODataUri() { ServiceRoot = _baseUri };
-
-            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
-            {
-                var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
-                var entry = this.CreatePersonEntryWithoutSerializationInfo();
-
+                // Set initial serialization info
                 entry.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "People", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
+
                 await odataWriter.WriteStartAsync(entry);
+
+                // Change serialization info after WriteStartAsync
                 entry.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "Parsen", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
+
                 await odataWriter.WriteEndAsync();
 
                 Stream stream = await responseMessageWithoutModel.GetStreamAsync();
+                var result = await TestsHelper.ReadStreamContentAsync(stream);
 
-                // nometadata option does not write odata.metadata in the payload
-                if (!mimeType.Contains(MimeTypes.ODataParameterNoMetadata))
-                {
-                    Assert.Contains("People/$entity", (await TestsHelper.ReadStreamContentAsync(stream)));
-                }
+                // Assert that the metadata still refers to "People", not "Parsen"
+                Assert.Contains("People/$entity", result);
+                Assert.DoesNotContain("Parsen/$entity", result);
+            }
+        }
+
+        [Fact]
+        public async Task ChangingSerializationInfoAfterWriteStart_NoMetadata_ShouldNotIncludeMetadataReference()
+        {
+            var mimeType = MimeTypeODataParameterNoMetadata;
+            var settings = new ODataMessageWriterSettings();
+            settings.ODataUri = new ODataUri() { ServiceRoot = _baseUri };
+
+            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+                var entry = this.CreatePersonEntryWithoutSerializationInfo();
+
+                // Set initial serialization info
+                entry.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "People", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
+
+                await odataWriter.WriteStartAsync(entry);
+
+                // Change serialization info after WriteStartAsync
+                entry.SetSerializationInfo(new ODataResourceSerializationInfo() { NavigationSourceName = "Parsen", NavigationSourceEntityTypeName = NameSpacePrefix + "Person" });
+
+                await odataWriter.WriteEndAsync();
+
+                Stream stream = await responseMessageWithoutModel.GetStreamAsync();
+                var result = await TestsHelper.ReadStreamContentAsync(stream);
+
+                // Assert that metadata reference is not included at all
+                Assert.DoesNotContain("$metadata", result);
             }
         }
 
         /// <summary>
-        /// Do not provide model, but hand craft IEdmEntitySet and IEdmEntityType for writer
+        /// Manually create an Edm model and verify OData serialization with metadata.
         /// </summary>
         [Theory]
         [InlineData(MimeTypeODataParameterFullMetadata)]
         [InlineData(MimeTypeODataParameterMinimalMetadata)]
-        [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task HandCraftEdmType(string mimeType)
+        public async Task WritingEntryWithHandcraftedEdmModel_WithMetadata_ShouldSerializeCorrectly(string mimeType)
         {
+            // Create an empty EDM model
             EdmModel edmModel = new EdmModel();
 
+            // Define an EdmEntityType (Person) with a key and properties
             EdmEntityType edmEntityType = new EdmEntityType(NameSpacePrefix, "Person");
-            edmModel.AddElement(edmEntityType);
             var keyProperty = new EdmStructuralProperty(edmEntityType, "PersonId", EdmCoreModel.Instance.GetInt32(false));
-            edmEntityType.AddKeys(new IEdmStructuralProperty[] { keyProperty });
+            edmEntityType.AddKeys(keyProperty);
             edmEntityType.AddProperty(keyProperty);
-            var property = new EdmStructuralProperty(edmEntityType, "Name", EdmCoreModel.Instance.GetString(true));
-            edmEntityType.AddKeys(new IEdmStructuralProperty[] { property });
-            edmEntityType.AddProperty(property);
 
+            var nameProperty = new EdmStructuralProperty(edmEntityType, "Name", EdmCoreModel.Instance.GetString(true));
+            edmEntityType.AddProperty(nameProperty);
+
+            edmModel.AddElement(edmEntityType);
+
+            // Define an entity set (People) inside a container
             var defaultContainer = new EdmEntityContainer(NameSpacePrefix, "DefaultContainer");
             edmModel.AddElement(defaultContainer);
 
             EdmEntitySet entitySet = new EdmEntitySet(defaultContainer, "People", edmEntityType);
             defaultContainer.AddElement(entitySet);
 
-            var settings = new ODataMessageWriterSettings();
-            settings.ODataUri = new ODataUri() { ServiceRoot = _baseUri };
-            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
+            // Set up OData writer settings
+            var settings = CreateODataMessageWriterSettings();
+
+            var responseMessage = new TestStreamResponseMessage(new MemoryStream());
+            responseMessage.SetHeader("Content-Type", mimeType);
+
+            using (var messageWriter = new ODataMessageWriter(responseMessage, settings))
             {
                 var odataWriter = await messageWriter.CreateODataResourceWriterAsync(entitySet, edmEntityType);
 
+                // Create and write the Person entry
                 var entry = this.CreatePersonEntryWithoutSerializationInfo();
                 await odataWriter.WriteStartAsync(entry);
                 await odataWriter.WriteEndAsync();
-
-                if (!mimeType.Contains(MimeTypes.ODataParameterNoMetadata))
-                {
-                    Assert.Contains("People/$entity", await TestsHelper.ReadStreamContentAsync(await responseMessageWithoutModel.GetStreamAsync()));
-                }
             }
+
+            // Read and validate the output
+            var responseContent = await TestsHelper.ReadStreamContentAsync(await responseMessage.GetStreamAsync());
+
+            // Assert that the payload contains expected metadata
+            Assert.Contains("PersonId", responseContent);
+            Assert.Contains("Name", responseContent);
+            Assert.Contains("People/$entity", responseContent);
+        }
+
+        /// <summary>
+        /// Manually create an Edm model and verify OData serialization with no metadata.
+        /// </summary>
+        [Fact]
+        public async Task WritingEntryWithHandcraftedEdmModel_WithNoMetadata_ShouldSerializeCorrectly()
+        {
+            string mimeType = MimeTypeODataParameterNoMetadata; // Explicitly use NoMetadata
+
+            // Create an empty EDM model
+            EdmModel edmModel = new EdmModel();
+
+            // Define an EdmEntityType (Person) with a key and properties
+            EdmEntityType edmEntityType = new EdmEntityType(NameSpacePrefix, "Person");
+            var keyProperty = new EdmStructuralProperty(edmEntityType, "PersonId", EdmCoreModel.Instance.GetInt32(false));
+            edmEntityType.AddKeys(keyProperty);
+            edmEntityType.AddProperty(keyProperty);
+
+            var nameProperty = new EdmStructuralProperty(edmEntityType, "Name", EdmCoreModel.Instance.GetString(true));
+            edmEntityType.AddProperty(nameProperty);
+
+            edmModel.AddElement(edmEntityType);
+
+            // Define an entity set (People) inside a container
+            var defaultContainer = new EdmEntityContainer(NameSpacePrefix, "DefaultContainer");
+            edmModel.AddElement(defaultContainer);
+
+            EdmEntitySet entitySet = new EdmEntitySet(defaultContainer, "People", edmEntityType);
+            defaultContainer.AddElement(entitySet);
+
+            // Set up OData writer settings
+            var settings = CreateODataMessageWriterSettings();
+
+            var responseMessage = new TestStreamResponseMessage(new MemoryStream());
+            responseMessage.SetHeader("Content-Type", mimeType);
+
+            using (var messageWriter = new ODataMessageWriter(responseMessage, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceWriterAsync(entitySet, edmEntityType);
+
+                // Create and write the Person entry
+                var entry = this.CreatePersonEntryWithoutSerializationInfo();
+                await odataWriter.WriteStartAsync(entry);
+                await odataWriter.WriteEndAsync();
+            }
+
+            // Read and validate the output
+            var responseContent = await TestsHelper.ReadStreamContentAsync(await responseMessage.GetStreamAsync());
+
+            // Assert that the payload contains expected data but NO metadata reference
+            Assert.Contains("PersonId", responseContent);
+            Assert.Contains("Name", responseContent);
+            Assert.DoesNotContain("People/$entity", responseContent);
         }
 
         private ODataResource CreatePersonEntryWithoutSerializationInfo()
@@ -461,20 +759,20 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
             return orderFeed;
         }
 
-        private static async Task AssertThrowsAsync<T>(Func<Task> action, string expectedError) where T : Exception
+        private ODataMessageWriterSettings CreateODataMessageWriterSettings()
         {
-            try
+            return new ODataMessageWriterSettings
             {
-                await action();
-                // Expected exception not thrown
-                Assert.Null(expectedError);
-            }
-            catch (T e)
-            {
-                // Unexpected exception " + e.Message
-                Assert.NotNull(expectedError);
-                Assert.Equal(expectedError, e.Message);
-            }
+                ODataUri = new ODataUri { ServiceRoot = _baseUri },
+                EnableMessageStreamDisposal = false
+            };
+        }
+
+        private TestStreamResponseMessage CreateTestResponseMessage(string mimeType)
+        {
+            var responseMessage = new TestStreamResponseMessage(new MemoryStream());
+            responseMessage.SetHeader("Content-Type", mimeType);
+            return responseMessage;
         }
 
         private WritePayloadTestsHelper TestsHelper
