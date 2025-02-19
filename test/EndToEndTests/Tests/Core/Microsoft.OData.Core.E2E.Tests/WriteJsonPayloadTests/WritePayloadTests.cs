@@ -40,23 +40,17 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
             _model = CommonEndToEndEdmModel.GetEdmModel();
         }
 
-        /// <summary>
-        /// Write a feed with multiple order entries. The feed/entry contains properties, navigation & association links, next link.
-        /// </summary>
-        [Theory]
-        [InlineData(MimeTypeODataParameterFullMetadata)]
-        [InlineData(MimeTypeODataParameterMinimalMetadata)]
-        [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task OrderFeedTest(string mimeType)
+        [Fact]
+        public async Task WritingAnODataFeed_WithFullMetadata_ShouldMatchExpectedPayload()
         {
+            var mimeType = MimeTypeODataParameterFullMetadata;
             var settings = new ODataMessageWriterSettings
             {
                 ODataUri = new ODataUri() { ServiceRoot = _baseUri },
                 EnableMessageStreamDisposal = false
             };
-            string outputWithModel = null;
-            string outputWithoutModel = null;
 
+            string outputWithModel;
             var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
             responseMessageWithModel.SetHeader("Content-Type", mimeType);
 
@@ -69,50 +63,102 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
                 outputWithModel = await WriteAndVerifyOrderFeedAsync(responseMessageWithModel, odataWriter, true, mimeType);
             }
 
+            string outputWithoutModel;
             var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
             responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+
             using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
             {
                 var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
-                outputWithoutModel = await WriteAndVerifyOrderFeedAsync(
-                    responseMessageWithoutModel,
-                    odataWriter,
-                    false,
-                    mimeType);
+                outputWithoutModel = await WriteAndVerifyOrderFeedAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
             }
 
-            //var rex = new Regex("\"\\w*@odata.type\":\"#[\\w\\(\\)\\.]*\",");
-            //outputWithoutModel = rex.Replace(outputWithoutModel, "");
-            //WritePayloadHelper.VerifyPayloadString(outputWithModel, outputWithoutModel, mimeType);
-            if (mimeType == MimeTypes.ApplicationJson + MimeTypes.ODataParameterFullMetadata)
-            {
-                var rex = new Regex("\"\\w*@odata.associationLink\":\"[^\"]*\",");
-                var outputWithModel2 = rex.Replace(outputWithModel, "");
-                var outputWithoutModel2 = rex.Replace(outputWithoutModel, "");
-                TestsHelper.VerifyPayloadString(outputWithModel2, outputWithoutModel2, mimeType);
-            }
-            else if (mimeType == MimeTypes.ApplicationJson + MimeTypes.ODataParameterMinimalMetadata)
-            {
-                var rex = new Regex("\"\\w*@odata.type\":\"#[\\w\\(\\)\\.]*\",");
-                var outputWithoutModel2 = rex.Replace(outputWithoutModel, "");
-                TestsHelper.VerifyPayloadString(outputWithModel, outputWithoutModel2, mimeType);
-            }
-            else
-            {
-                //NoMetadata with/out model should result in same output
-                Assert.Equal(outputWithModel, outputWithoutModel);
-            }
+            var rex = new Regex("\"\\w*@odata.associationLink\":\"[^\"]*\",");
+            var outputWithModel2 = rex.Replace(outputWithModel, "");
+            var outputWithoutModel2 = rex.Replace(outputWithoutModel, "");
+
+            Assert.Equal(outputWithModel2, outputWithoutModel2);
         }
 
-        /// <summary>
-        /// Write an expanded customer entry containing primitive, complex, collection of primitive/complex properties.
-        /// </summary>
-        [Theory]
-        [InlineData(MimeTypeODataParameterFullMetadata)]
-        [InlineData(MimeTypeODataParameterMinimalMetadata)]
-        [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task ExpandedCustomerEntryTest(string mimeType)
+        [Fact]
+        public async Task WritingAnODataFeed_WithMinimalMetadata_ShouldMatchExpectedPayload()
         {
+            var mimeType = MimeTypeODataParameterMinimalMetadata;
+            var settings = new ODataMessageWriterSettings
+            {
+                ODataUri = new ODataUri() { ServiceRoot = _baseUri },
+                EnableMessageStreamDisposal = false
+            };
+
+            string outputWithModel;
+            var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithModel.SetHeader("Content-Type", mimeType);
+
+            var orderType = _model.FindDeclaredType(NameSpacePrefix + "Order") as IEdmEntityType;
+            var orderSet = _model.EntityContainer.FindEntitySet("Orders");
+
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithModel, settings, _model))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync(orderSet, orderType);
+                outputWithModel = await WriteAndVerifyOrderFeedAsync(responseMessageWithModel, odataWriter, true, mimeType);
+            }
+
+            string outputWithoutModel;
+            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+                outputWithoutModel = await WriteAndVerifyOrderFeedAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
+            }
+
+            var rex = new Regex("\"\\w*@odata.type\":\"#[\\w\\(\\)\\.]*\",");
+            var outputWithoutModel2 = rex.Replace(outputWithoutModel, "");
+
+            Assert.Equal(outputWithModel, outputWithoutModel2);
+        }
+
+        [Fact]
+        public async Task WritingAnODataFeed_WithNoMetadata_ShouldMatchExpectedPayload()
+        {
+            var mimeType = MimeTypeODataParameterNoMetadata;
+            var settings = new ODataMessageWriterSettings
+            {
+                ODataUri = new ODataUri() { ServiceRoot = _baseUri },
+                EnableMessageStreamDisposal = false
+            };
+
+            string outputWithModel;
+            var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithModel.SetHeader("Content-Type", mimeType);
+
+            var orderType = _model.FindDeclaredType(NameSpacePrefix + "Order") as IEdmEntityType;
+            var orderSet = _model.EntityContainer.FindEntitySet("Orders");
+
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithModel, settings, _model))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync(orderSet, orderType);
+                outputWithModel = await WriteAndVerifyOrderFeedAsync(responseMessageWithModel, odataWriter, true, mimeType);
+            }
+
+            string outputWithoutModel;
+            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+                outputWithoutModel = await WriteAndVerifyOrderFeedAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
+            }
+
+            Assert.Equal(outputWithModel, outputWithoutModel);
+        }
+
+        [Fact]
+        public async Task WritingAnExpandedEntry_WithFullMetadata_ShouldMatchExpectedPayload()
+        {
+            var mimeType = MimeTypeODataParameterFullMetadata;
             var settings = new ODataMessageWriterSettings
             {
                 ODataUri = new ODataUri() { ServiceRoot = _baseUri },
@@ -122,6 +168,7 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
             string outputWithModel = null;
             string outputWithoutModel = null;
 
+            // Without Model
             var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
             responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
             using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
@@ -129,6 +176,8 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
                 var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
                 outputWithoutModel = await WriteAndVerifyExpandedCustomerEntryAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
             }
+
+            // With Model
             var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
             responseMessageWithModel.SetHeader("Content-Type", mimeType);
 
@@ -138,146 +187,216 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
             using (var messageWriter = new ODataMessageWriter(responseMessageWithModel, settings, _model))
             {
                 var odataWriter = await messageWriter.CreateODataResourceWriterAsync(customerSet, customerType);
-                outputWithModel = await WriteAndVerifyExpandedCustomerEntryAsync(responseMessageWithModel, odataWriter,false, mimeType);
+                outputWithModel = await WriteAndVerifyExpandedCustomerEntryAsync(responseMessageWithModel, odataWriter, false, mimeType);
             }
 
-            if (mimeType == MimeTypes.ApplicationJson + MimeTypes.ODataParameterFullMetadata)
-            {
-                var rex = new Regex("\"\\w*@odata.associationLink\":\"[^\"]*\",");
-                var outputWithModel2 = rex.Replace(outputWithModel, "");
-                var outputWithoutModel2 = rex.Replace(outputWithoutModel, "");
-                TestsHelper.VerifyPayloadString(outputWithModel2, outputWithoutModel2, mimeType);
-            }
-            else if (mimeType == MimeTypes.ApplicationJson + MimeTypes.ODataParameterMinimalMetadata)
-            {
-                var rex = new Regex("\"\\w*@odata.type\":\"#[\\w\\(\\)\\.]*\",");
-                var outputWithoutModel2 = rex.Replace(outputWithoutModel, "");
-                TestsHelper.VerifyPayloadString(outputWithModel, outputWithoutModel2, mimeType);
-            }
-            else
-            {
-                //NoMetadata with/out model should result in same output
-                Assert.Equal(outputWithModel, outputWithoutModel);
-            }
+            var rex = new Regex("\"\\w*@odata.associationLink\":\"[^\"]*\",");
+            var outputWithModel2 = rex.Replace(outputWithModel, "");
+            var outputWithoutModel2 = rex.Replace(outputWithoutModel, "");
+
+            Assert.Equal(outputWithModel2, outputWithoutModel2);
         }
 
-        /// <summary>
-        /// Write an entry containing stream, named stream
-        /// </summary>
-        [Theory]
-        [InlineData(MimeTypeODataParameterFullMetadata)]
-        [InlineData(MimeTypeODataParameterMinimalMetadata)]
-        [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task CarEntryTest(string mimeType)
+        [Fact]
+        public async Task WritingAnExpandedEntry_WithMinimalMetadata_ShouldMatchExpectedPayload()
         {
+            var mimeType = MimeTypeODataParameterMinimalMetadata;
             var settings = new ODataMessageWriterSettings
             {
                 ODataUri = new ODataUri() { ServiceRoot = _baseUri },
                 EnableMessageStreamDisposal = false
             };
+
+            string outputWithModel = null;
+            string outputWithoutModel = null;
+
+            // Without Model
+            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+                outputWithoutModel = await WriteAndVerifyExpandedCustomerEntryAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
+            }
+
+            // With Model
+            var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithModel.SetHeader("Content-Type", mimeType);
+
+            var customerType = _model.FindDeclaredType(NameSpacePrefix + "Customer") as IEdmEntityType;
+            var customerSet = _model.EntityContainer.FindEntitySet("Customers");
+
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithModel, settings, _model))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceWriterAsync(customerSet, customerType);
+                outputWithModel = await WriteAndVerifyExpandedCustomerEntryAsync(responseMessageWithModel, odataWriter, false, mimeType);
+            }
+
+            var rex = new Regex("\"\\w*@odata.type\":\"#[\\w\\(\\)\\.]*\",");
+            var outputWithoutModel2 = rex.Replace(outputWithoutModel, "");
+
+            Assert.Equal(outputWithModel, outputWithoutModel2);
+        }
+
+        [Fact]
+        public async Task WritingAnExpandedEntryTest_WithNoMetadata_ShouldMatchExpectedPayload()
+        {
+            var mimeType = MimeTypeODataParameterNoMetadata;
+            var settings = new ODataMessageWriterSettings
+            {
+                ODataUri = new ODataUri() { ServiceRoot = _baseUri },
+                EnableMessageStreamDisposal = false
+            };
+
+            string outputWithModel = null;
+            string outputWithoutModel = null;
+
+            // Without Model
+            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+                outputWithoutModel = await WriteAndVerifyExpandedCustomerEntryAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
+            }
+
+            // With Model
+            var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithModel.SetHeader("Content-Type", mimeType);
+
+            var customerType = _model.FindDeclaredType(NameSpacePrefix + "Customer") as IEdmEntityType;
+            var customerSet = _model.EntityContainer.FindEntitySet("Customers");
+
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithModel, settings, _model))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceWriterAsync(customerSet, customerType);
+                outputWithModel = await WriteAndVerifyExpandedCustomerEntryAsync(responseMessageWithModel, odataWriter, false, mimeType);
+            }
+
+            // No Metadata with/out model should result in same output
+            Assert.Equal(outputWithModel, outputWithoutModel);
+        }
+
+        [Fact]
+        public async Task WritingAFeedContainingActionsAndDerivedTypes_WithFullMetadata_ShouldMatchExpectedPayload()
+        {
+            var mimeType = MimeTypeODataParameterFullMetadata;
+            var settings = new ODataMessageWriterSettings
+            {
+                BaseUri = _baseUri,
+                ODataUri = new ODataUri() { ServiceRoot = _baseUri },
+                EnableMessageStreamDisposal = false
+            };
+
             string outputWithModel = null;
             string outputWithoutModel = null;
 
             var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
             responseMessageWithModel.SetHeader("Content-Type", mimeType);
-            responseMessageWithModel.PreferenceAppliedHeader().AnnotationFilter = "*";
 
-            var carType = _model.FindDeclaredType(NameSpacePrefix + "Car") as IEdmEntityType;
-            var carSet = _model.EntityContainer.FindEntitySet("Cars");
+            var personType = _model.FindDeclaredType(NameSpacePrefix + "Person") as IEdmEntityType;
+            var personSet = _model.EntityContainer.FindEntitySet("People");
 
             using (var messageWriter = new ODataMessageWriter(responseMessageWithModel, settings, _model))
             {
-                var odataWriter = await messageWriter.CreateODataResourceWriterAsync(carSet, carType);
-                outputWithModel = await WriteAndVerifyCarEntryAsync(responseMessageWithModel, odataWriter, true, mimeType);
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync(personSet, personType);
+                outputWithModel = await WriteAndVerifyPersonFeedAsync(responseMessageWithModel, odataWriter, false, mimeType);
             }
 
             var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
             responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-            responseMessageWithoutModel.PreferenceAppliedHeader().AnnotationFilter = "*";
             using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
             {
-                var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
-                outputWithoutModel = await WriteAndVerifyCarEntryAsync(responseMessageWithoutModel, odataWriter, false,mimeType);
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+                outputWithoutModel = await WriteAndVerifyPersonFeedAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
             }
 
-            TestsHelper.VerifyPayloadString(outputWithModel, outputWithoutModel, mimeType);
+            Assert.Equal(outputWithModel, outputWithoutModel);
+            Assert.Contains(_baseUri + "$metadata#People\"", outputWithoutModel);
         }
 
-        /// <summary>
-        /// Write a feed containing actions, derived type entry instance
-        /// </summary>
-        [Theory]
-        [InlineData(MimeTypeODataParameterFullMetadata)]
-        [InlineData(MimeTypeODataParameterMinimalMetadata)]
-        [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task PersonFeedTest(string mimeType)
+        [Fact]
+        public async Task WritingAFeedContainingActionsAndDerivedTypes_WithMinimalMetadata_ShouldMatchExpectedPayload()
         {
-            if (mimeType != MimeTypes.ApplicationJson + MimeTypes.ODataParameterFullMetadata)
+            var mimeType = MimeTypeODataParameterMinimalMetadata;
+            var settings = new ODataMessageWriterSettings
             {
-                var settings = new ODataMessageWriterSettings
-                {
-                    BaseUri = _baseUri,
-                    ODataUri = new ODataUri() { ServiceRoot = _baseUri },
-                    EnableMessageStreamDisposal = false
-                };
+                BaseUri = _baseUri,
+                ODataUri = new ODataUri() { ServiceRoot = _baseUri },
+                EnableMessageStreamDisposal = false
+            };
 
-                string outputWithModel = null;
-                string outputWithoutModel = null;
+            string outputWithModel = null;
+            string outputWithoutModel = null;
 
-                var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
-                responseMessageWithModel.SetHeader("Content-Type", mimeType);
+            var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithModel.SetHeader("Content-Type", mimeType);
 
-                var personType = _model.FindDeclaredType(NameSpacePrefix + "Person") as IEdmEntityType;
-                var personSet = _model.EntityContainer.FindEntitySet("People");
+            var personType = _model.FindDeclaredType(NameSpacePrefix + "Person") as IEdmEntityType;
+            var personSet = _model.EntityContainer.FindEntitySet("People");
 
-                using (var messageWriter = new ODataMessageWriter(responseMessageWithModel, settings, _model))
-                {
-                    var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync(personSet, personType);
-                    outputWithModel = await WriteAndVerifyPersonFeedAsync(responseMessageWithModel, odataWriter, false, mimeType);
-                }
-
-                var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
-                responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
-                using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
-                {
-                    var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
-                    outputWithoutModel = await WriteAndVerifyPersonFeedAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
-                }
-
-                if (mimeType == MimeTypes.ApplicationJson + MimeTypes.ODataParameterMinimalMetadata)
-                {
-                    TestsHelper.VerifyPayloadString(outputWithModel, outputWithoutModel, mimeType);
-                }
-                else
-                {
-                    //NoMetadata with/out model should result in same output
-                    Assert.Equal(outputWithModel, outputWithoutModel);
-                }
-
-                if (mimeType.Contains(MimeTypes.ODataParameterMinimalMetadata) || mimeType.Contains(MimeTypes.ODataParameterFullMetadata))
-                {
-                    Assert.True(outputWithoutModel.Contains(_baseUri + "$metadata#People\""));
-                }
-
-                if (mimeType.Contains(MimeTypes.ApplicationJsonLight))
-                {
-                    // odata.type is included in json light payload only if entry typename is different than serialization info
-                    Assert.False(outputWithoutModel.Contains("{\"@odata.type\":\"" + "#" + NameSpacePrefix + "Person\","), "odata.type Person");
-                    Assert.True(outputWithoutModel.Contains("{\"@odata.type\":\"" + "#" + NameSpacePrefix + "Employee\","), "odata.type Employee");
-                    Assert.True(outputWithoutModel.Contains("{\"@odata.type\":\"" + "#" + NameSpacePrefix + "SpecialEmployee\","), "odata.type SpecialEmployee");
-                }
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithModel, settings, _model))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync(personSet, personType);
+                outputWithModel = await WriteAndVerifyPersonFeedAsync(responseMessageWithModel, odataWriter, false, mimeType);
             }
+
+            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+                outputWithoutModel = await WriteAndVerifyPersonFeedAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
+            }
+
+            Assert.Equal(outputWithModel, outputWithoutModel);
+            Assert.Contains(_baseUri + "$metadata#People\"", outputWithoutModel);
+            Assert.False(outputWithoutModel.Contains("{\"@odata.type\":\"" + "#" + NameSpacePrefix + "Person\","), "odata.type Person");
+            Assert.True(outputWithoutModel.Contains("{\"@odata.type\":\"" + "#" + NameSpacePrefix + "Employee\","), "odata.type Employee");
+            Assert.True(outputWithoutModel.Contains("{\"@odata.type\":\"" + "#" + NameSpacePrefix + "SpecialEmployee\","), "odata.type SpecialEmployee");
         }
 
-        /// <summary>
-        /// Write an employee entry with/without ExpectedTypeName in serialization info
-        /// </summary>
-        [Theory]
-        [InlineData(MimeTypeODataParameterFullMetadata)]
-        [InlineData(MimeTypeODataParameterMinimalMetadata)]
-        [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task EmployeeEntryTest(string mimeType)
+        [Fact]
+        public async Task WritingAFeedContainingActionsAndDerivedTypes_WithNoMetadata_ShouldMatchExpectedPayload()
         {
+            var mimeType = MimeTypeODataParameterNoMetadata;
+            var settings = new ODataMessageWriterSettings
+            {
+                BaseUri = _baseUri,
+                ODataUri = new ODataUri() { ServiceRoot = _baseUri },
+                EnableMessageStreamDisposal = false
+            };
+
+            string outputWithModel = null;
+            string outputWithoutModel = null;
+
+            var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithModel.SetHeader("Content-Type", mimeType);
+
+            var personType = _model.FindDeclaredType(NameSpacePrefix + "Person") as IEdmEntityType;
+            var personSet = _model.EntityContainer.FindEntitySet("People");
+
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithModel, settings, _model))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync(personSet, personType);
+                outputWithModel = await WriteAndVerifyPersonFeedAsync(responseMessageWithModel, odataWriter, false, mimeType);
+            }
+
+            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceSetWriterAsync();
+                outputWithoutModel = await WriteAndVerifyPersonFeedAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
+            }
+
+            Assert.Equal(outputWithModel, outputWithoutModel);
+        }
+
+        [Fact]
+        public async Task WritingAnEntryWithOrWithoutTypeCast_WithFullMetadata_ShouldMatchExpectedMetadata()
+        {
+            var mimeType = MimeTypeODataParameterFullMetadata;
             var settings = new ODataMessageWriterSettings
             {
                 BaseUri = _baseUri,
@@ -314,21 +433,98 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
                     mimeType);
             }
 
-            if (mimeType.Contains(MimeTypes.ODataParameterMinimalMetadata) || mimeType.Contains(MimeTypes.ODataParameterFullMetadata))
+            // expect type cast in odata.metadata if EntitySetElementTypeName != ExpectedTypeName
+            Assert.Contains(_baseUri + "$metadata#People/$entity", outputWithoutTypeCast);
+            Assert.Contains(_baseUri + "$metadata#People/" + NameSpacePrefix + "Employee/$entity", outputWithTypeCast);
+        }
+
+        [Fact]
+        public async Task WritingAnEntryWithOrWithoutTypeCast_WithMinimalMetadata_ShouldMatchExpectedMetadata()
+        {
+            var mimeType = MimeTypeODataParameterMinimalMetadata;
+            var settings = new ODataMessageWriterSettings
             {
-                // expect type cast in odata.metadata if EntitySetElementTypeName != ExpectedTypeName
-                Assert.True(outputWithoutTypeCast.Contains(_baseUri + "$metadata#People/$entity"));
-                Assert.True(
-                    outputWithTypeCast.Contains(_baseUri + "$metadata#People/" + NameSpacePrefix +
-                                                "Employee/$entity"));
+                BaseUri = _baseUri,
+                ODataUri = new ODataUri() { ServiceRoot = _baseUri },
+                EnableMessageStreamDisposal = false
+            };
+
+            string outputWithTypeCast = null;
+            string outputWithoutTypeCast = null;
+
+            // employee entry as response of person(1)
+            var responseMessageWithoutTypeCast = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutTypeCast.SetHeader("Content-Type", mimeType);
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutTypeCast, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+                outputWithoutTypeCast = await WriteAndVerifyEmployeeEntryAsync(
+                    responseMessageWithoutTypeCast,
+                    odataWriter,
+                    false,
+                    mimeType);
             }
 
-            if (mimeType.Contains(MimeTypes.ApplicationJsonLight))
+            // employee entry as response of person(1)/EmployeeTyeName, in this case the test sets ExpectedTypeName as Employee in Serialization info
+            var responseMessageWithTypeCast = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithTypeCast.SetHeader("Content-Type", mimeType);
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithTypeCast, settings))
             {
-                // write odata.type if entry TypeName != ExpectedTypeName
-                Assert.True(outputWithoutTypeCast.Contains("odata.type"));
-                Assert.False(outputWithTypeCast.Contains("odata.type"));
+                var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+                outputWithTypeCast = await WriteAndVerifyEmployeeEntryAsync(
+                    responseMessageWithTypeCast,
+                    odataWriter,
+                    true,
+                    mimeType);
             }
+
+            // expect type cast in odata.metadata if EntitySetElementTypeName != ExpectedTypeName
+            Assert.Contains(_baseUri + "$metadata#People/$entity", outputWithoutTypeCast);
+            Assert.Contains(_baseUri + "$metadata#People/" + NameSpacePrefix + "Employee/$entity", outputWithTypeCast);
+            Assert.Contains("odata.type", outputWithoutTypeCast);
+            Assert.DoesNotContain("odata.type", outputWithTypeCast);
+        }
+
+        /// <summary>
+        /// Write an entry containing stream, named stream
+        /// </summary>
+        [Theory]
+        [InlineData(MimeTypeODataParameterFullMetadata)]
+        [InlineData(MimeTypeODataParameterMinimalMetadata)]
+        [InlineData(MimeTypeODataParameterNoMetadata)]
+        public async Task WritingAnEntryContainingAStream_ShouldMatchExpectedPayload(string mimeType)
+        {
+            var settings = new ODataMessageWriterSettings
+            {
+                ODataUri = new ODataUri() { ServiceRoot = _baseUri },
+                EnableMessageStreamDisposal = false
+            };
+            string outputWithModel = null;
+            string outputWithoutModel = null;
+
+            var responseMessageWithModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithModel.SetHeader("Content-Type", mimeType);
+            responseMessageWithModel.PreferenceAppliedHeader().AnnotationFilter = "*";
+
+            var carType = _model.FindDeclaredType(NameSpacePrefix + "Car") as IEdmEntityType;
+            var carSet = _model.EntityContainer.FindEntitySet("Cars");
+
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithModel, settings, _model))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceWriterAsync(carSet, carType);
+                outputWithModel = await WriteAndVerifyCarEntryAsync(responseMessageWithModel, odataWriter, true, mimeType);
+            }
+
+            var responseMessageWithoutModel = new TestStreamResponseMessage(new MemoryStream());
+            responseMessageWithoutModel.SetHeader("Content-Type", mimeType);
+            responseMessageWithoutModel.PreferenceAppliedHeader().AnnotationFilter = "*";
+            using (var messageWriter = new ODataMessageWriter(responseMessageWithoutModel, settings))
+            {
+                var odataWriter = await messageWriter.CreateODataResourceWriterAsync();
+                outputWithoutModel = await WriteAndVerifyCarEntryAsync(responseMessageWithoutModel, odataWriter, false, mimeType);
+            }
+
+            Assert.Equal(outputWithModel, outputWithoutModel);
         }
 
         /// <summary>
@@ -338,7 +534,7 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
         [InlineData(MimeTypeODataParameterFullMetadata)]
         [InlineData(MimeTypeODataParameterMinimalMetadata)]
         [InlineData(MimeTypeODataParameterNoMetadata)]
-        public async Task ComplexCollectionTest(string mimeType)
+        public async Task WritingAFeedWithComplexCollections_ShouldMatchExpectedPayload(string mimeType)
         {
             string testMimeType = mimeType.Contains("xml") ? MimeTypes.ApplicationXml : mimeType;
 
@@ -390,21 +586,18 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
         [InlineData(MimeTypeODataParameterNoMetadata)]
         public async Task LinksTest(string mimeType)
         {
-            if (!mimeType.Equals(MimeTypes.ApplicationXml))
+            string testMimeType = mimeType;
+            var settings = new ODataMessageWriterSettings
             {
-                string testMimeType = mimeType;
-                var settings = new ODataMessageWriterSettings
-                {
-                    ODataUri = new ODataUri() { ServiceRoot = _baseUri },
-                    EnableMessageStreamDisposal = false
-                };
+                ODataUri = new ODataUri() { ServiceRoot = _baseUri },
+                EnableMessageStreamDisposal = false
+            };
 
-                var responseMessage = new TestStreamResponseMessage(new MemoryStream());
-                responseMessage.SetHeader("Content-Type", testMimeType);
-                using (var messageWriter = new ODataMessageWriter(responseMessage, settings, _model))
-                {
-                    await this.WriteAndVerifyLinksAsync(responseMessage, messageWriter, testMimeType);
-                }
+            var responseMessage = new TestStreamResponseMessage(new MemoryStream());
+            responseMessage.SetHeader("Content-Type", testMimeType);
+            using (var messageWriter = new ODataMessageWriter(responseMessage, settings, _model))
+            {
+                await this.WriteAndVerifyLinksAsync(responseMessage, messageWriter, testMimeType);
             }
         }
 
@@ -481,7 +674,7 @@ namespace Microsoft.OData.Core.E2E.Tests.WriteJsonPayloadTests
                     odataWriter, false, mimeType);
             }
 
-            TestsHelper.VerifyPayloadString(outputWithModel, outputWithoutModel, mimeType);
+            Assert.Equal(outputWithModel, outputWithoutModel);
         }
 
         private async Task<string> WriteAndVerifyOrderFeedAsync(
